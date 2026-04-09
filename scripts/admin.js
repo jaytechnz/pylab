@@ -1,0 +1,247 @@
+// ─── Admin Panel — User Management ───────────────────────────────────────────
+// Superadmin: add/view all teachers and students.
+// Teachers: add/view students in their own classes.
+
+import { createAccount } from './auth.js';
+import { getAllUsers, saveClassName, getClassNames } from './storage.js';
+import {
+  signInWithEmailAndPassword
+} from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
+import { auth } from './firebase-config.js';
+
+let _adminUser    = null;
+let _adminProfile = null;
+
+export function initAdmin(user, profile) {
+  _adminUser    = user;
+  _adminProfile = profile;
+}
+
+export async function renderAdmin(containerEl) {
+  containerEl.innerHTML = '<p class="dash-loading">Loading…</p>';
+
+  let users = [];
+  let classNames = {};
+  try {
+    [users, classNames] = await Promise.all([getAllUsers(), getClassNames()]);
+  } catch (e) {
+    containerEl.innerHTML = `<p class="dash-error">Failed to load: ${escHtml(e.message)}</p>`;
+    return;
+  }
+
+  const isSuperAdmin = _adminProfile?.role === 'superadmin';
+  const myClassCodes = isSuperAdmin
+    ? [...new Set(users.filter(u => u.role === 'student').map(u => u.classCode).filter(Boolean))]
+    : [_adminProfile?.classCode].filter(Boolean);
+
+  const teachers = users.filter(u => u.role === 'teacher' || u.role === 'superadmin');
+  const students = isSuperAdmin
+    ? users.filter(u => u.role === 'student')
+    : users.filter(u => u.role === 'student' && myClassCodes.includes(u.classCode));
+
+  containerEl.innerHTML = `<div class="admin-sections">
+    ${isSuperAdmin ? _buildAddTeacherForm() : ''}
+    ${_buildAddStudentForm(classNames, isSuperAdmin, myClassCodes)}
+    ${isSuperAdmin ? _buildTeacherList(teachers) : ''}
+    ${_buildStudentList(students, classNames)}
+    ${_buildClassNamesForm(classNames, myClassCodes)}
+  </div>`;
+
+  _bindAdminEvents(containerEl);
+}
+
+// ── Add Teacher Form ──────────────────────────────────────────────────────────
+
+function _buildAddTeacherForm() {
+  return `<div class="admin-section">
+    <div class="admin-section-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Add Teacher
+    </div>
+    <div class="admin-form" id="add-teacher-form">
+      <input type="text"  id="new-teacher-name"  placeholder="Full name" autocomplete="off">
+      <input type="email" id="new-teacher-email" placeholder="name@cga.school" autocomplete="off">
+      <input type="text"  id="new-teacher-class" placeholder="Class code (e.g. CS9A-2026)" autocomplete="off">
+      <input type="text"  id="new-teacher-pw"    placeholder="Temporary password (min 8 chars)" autocomplete="new-password">
+      <div id="add-teacher-msg" class="admin-msg hidden"></div>
+      <button class="btn-primary" id="btn-add-teacher">Add Teacher</button>
+    </div>
+  </div>`;
+}
+
+// ── Add Student Form ──────────────────────────────────────────────────────────
+
+function _buildAddStudentForm(classNames, isSuperAdmin, myClassCodes) {
+  const classOptions = myClassCodes.map(cc =>
+    `<option value="${escHtml(cc)}">${escHtml(classNames[cc] || cc)}</option>`
+  ).join('');
+
+  return `<div class="admin-section">
+    <div class="admin-section-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Add Student
+    </div>
+    <div class="admin-form" id="add-student-form">
+      <input type="text"  id="new-student-name"  placeholder="Full name" autocomplete="off">
+      <input type="email" id="new-student-email" placeholder="name@student.cga.school" autocomplete="off">
+      ${isSuperAdmin
+        ? `<input type="text" id="new-student-class" placeholder="Class code (e.g. CS9A-2026)" autocomplete="off">`
+        : `<select id="new-student-class">${classOptions}</select>`}
+      <input type="text"  id="new-student-pw"    placeholder="Temporary password (min 8 chars)" autocomplete="new-password">
+      <div id="add-student-msg" class="admin-msg hidden"></div>
+      <button class="btn-primary" id="btn-add-student">Add Student</button>
+    </div>
+  </div>`;
+}
+
+// ── Teacher list ──────────────────────────────────────────────────────────────
+
+function _buildTeacherList(teachers) {
+  const rows = teachers.map(t => `<tr>
+    <td>${escHtml(t.displayName ?? '—')}</td>
+    <td>${escHtml(t.email ?? '—')}</td>
+    <td><span class="role-badge ${t.role === 'superadmin' ? 'role-badge--superadmin' : ''}">${escHtml(t.role)}</span></td>
+  </tr>`).join('');
+
+  return `<div class="admin-section">
+    <div class="admin-section-title">Teachers (${teachers.length})</div>
+    <div class="dash-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="3" style="color:var(--text-muted)">No teachers yet.</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── Student list ──────────────────────────────────────────────────────────────
+
+function _buildStudentList(students, classNames) {
+  const rows = students.map(s => `<tr>
+    <td>${escHtml(s.displayName ?? '—')}</td>
+    <td>${escHtml(s.email ?? '—')}</td>
+    <td>${escHtml(classNames[s.classCode] || s.classCode || '—')}</td>
+  </tr>`).join('');
+
+  return `<div class="admin-section">
+    <div class="admin-section-title">Students (${students.length})</div>
+    <div class="dash-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Class</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="3" style="color:var(--text-muted)">No students yet.</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── Class names form ──────────────────────────────────────────────────────────
+
+function _buildClassNamesForm(classNames, classCodes) {
+  const fields = classCodes.map(cc => `
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <span style="font-size:0.78rem;color:var(--text-muted);width:110px;flex-shrink:0">${escHtml(cc)}</span>
+      <input type="text" class="class-name-input" data-code="${escHtml(cc)}"
+             value="${escHtml(classNames[cc] || '')}" placeholder="Friendly name (e.g. Year 9A)">
+    </div>`).join('');
+
+  return `<div class="admin-section">
+    <div class="admin-section-title">Class Names</div>
+    <div class="admin-form" id="class-names-form">
+      ${fields || '<p style="color:var(--text-muted);font-size:0.8rem">No classes created yet.</p>'}
+      <div id="class-names-msg" class="admin-msg hidden"></div>
+      ${classCodes.length ? '<button class="btn-primary" id="btn-save-class-names">Save Names</button>' : ''}
+    </div>
+  </div>`;
+}
+
+// ── Event binding ─────────────────────────────────────────────────────────────
+
+function _bindAdminEvents(container) {
+  // Add teacher
+  container.querySelector('#btn-add-teacher')?.addEventListener('click', async () => {
+    const name  = document.getElementById('new-teacher-name')?.value.trim();
+    const email = document.getElementById('new-teacher-email')?.value.trim();
+    const cls   = document.getElementById('new-teacher-class')?.value.trim();
+    const pw    = document.getElementById('new-teacher-pw')?.value;
+    const msg   = document.getElementById('add-teacher-msg');
+    if (!name || !email || !pw) { showMsg(msg, 'error', 'All fields required.'); return; }
+    if (pw.length < 8) { showMsg(msg, 'error', 'Password must be at least 8 characters.'); return; }
+
+    showMsg(msg, '', 'Creating account…');
+    try {
+      await _createAndRestoreSession(email, pw, name, cls, 'teacher');
+      showMsg(msg, 'success', `Teacher account created for ${email}. Temp password: ${pw}`);
+    } catch (e) {
+      showMsg(msg, 'error', e.message ?? 'Failed to create account.');
+    }
+  });
+
+  // Add student
+  container.querySelector('#btn-add-student')?.addEventListener('click', async () => {
+    const name  = document.getElementById('new-student-name')?.value.trim();
+    const email = document.getElementById('new-student-email')?.value.trim();
+    const cls   = document.getElementById('new-student-class')?.value?.trim?.();
+    const pw    = document.getElementById('new-student-pw')?.value;
+    const msg   = document.getElementById('add-student-msg');
+    if (!name || !email || !pw) { showMsg(msg, 'error', 'All fields required.'); return; }
+    if (pw.length < 8) { showMsg(msg, 'error', 'Password must be at least 8 characters.'); return; }
+
+    showMsg(msg, '', 'Creating account…');
+    try {
+      await _createAndRestoreSession(email, pw, name, cls, 'student');
+      showMsg(msg, 'success', `Student account created for ${email}. Temp password: ${pw}`);
+    } catch (e) {
+      showMsg(msg, 'error', e.message ?? 'Failed to create account.');
+    }
+  });
+
+  // Save class names
+  container.querySelector('#btn-save-class-names')?.addEventListener('click', async () => {
+    const msg = document.getElementById('class-names-msg');
+    const inputs = container.querySelectorAll('.class-name-input');
+    try {
+      await Promise.all([...inputs].map(inp => saveClassName(inp.dataset.code, inp.value.trim())));
+      showMsg(msg, 'success', 'Class names saved.');
+    } catch (e) {
+      showMsg(msg, 'error', 'Failed to save: ' + e.message);
+    }
+  });
+}
+
+// ── Create account and restore admin session ──────────────────────────────────
+
+async function _createAndRestoreSession(email, pw, name, classCode, role) {
+  const adminEmail    = _adminUser?.email;
+  const adminPassword = null;  // We can't retrieve the admin's password.
+
+  // createAccount signs in as the new user temporarily.
+  await createAccount(email, pw, name, classCode, role);
+
+  // After createAccount, the new user is signed in.
+  // The admin's onAuth will fire with the new user — not ideal.
+  // Solution: store admin credentials and re-sign in.
+  // Since we can't retrieve the password, we just note this limitation.
+  // In a production app, use Firebase Admin SDK via Cloud Functions.
+  // For now, we'll force a page reload note, or the admin re-signs in.
+  // IMPORTANT: After creating a user, the admin session ends.
+  // We handle this by showing a message and signing back in.
+
+  // Try to re-sign in the admin by triggering a custom event
+  window.dispatchEvent(new CustomEvent('admin-created-user', {
+    detail: { adminEmail }
+  }));
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function showMsg(el, type, text) {
+  if (!el) return;
+  el.textContent = text;
+  el.className = `admin-msg ${type}`;
+  el.classList.remove('hidden');
+}
+
+function escHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
