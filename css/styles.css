@@ -1389,3 +1389,10 @@ details[open] .ref-section-title::before { transform: rotate(90deg); }
   border-radius: 999px;
   font-weight: 700;
 }
+
+/* =======================================
+ * FOOTER
+ * ==================================== */
+ footer, h6 {
+  text-align: center;
+ }
