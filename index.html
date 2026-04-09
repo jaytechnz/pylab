@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CGA PyLab — Python 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,700&family=Audiowide&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/opendyslexic" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/challenges.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="assets/sammy_snake_thumbs_up.png" alt="Sammy the Python Snake" onerror="this.style.display='none'">
+    </div>
+    <h1 class="login-title">PyLab</h1>
+    <p class="login-subtitle">Python 3 Programming</p>
+
+    <!-- Sign In Form (only form — no self-registration) -->
+    <form id="signin-form" class="auth-form active">
+      <div class="form-group">
+        <label for="signin-email">School Email</label>
+        <input type="email" id="signin-email" placeholder="name@cga.school or name@student.cga.school" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="signin-password">Password</label>
+        <div class="input-pw-wrap">
+          <input type="text" class="pw-masked" id="signin-password" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="pw-toggle" data-target="signin-password" aria-label="Show password">
+            <svg class="pw-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-eye-off hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="signin-error" class="auth-error hidden"></div>
+      <button type="submit" class="btn-primary btn-full" id="signin-btn">
+        <span class="btn-label">Sign In</span>
+        <span class="btn-spinner hidden">●</span>
+      </button>
+      <button type="button" class="forgot-password-link" id="forgot-password-btn">Forgot password?</button>
+    </form>
+
+    <!-- Forgot Password Panel -->
+    <div id="reset-panel" class="reset-panel hidden">
+      <p class="reset-title">Reset Password</p>
+      <div class="form-group">
+        <label for="reset-email">Your school email</label>
+        <input type="email" id="reset-email" placeholder="name@student.cga.school">
+      </div>
+      <div id="reset-error" class="auth-error hidden"></div>
+      <div class="reset-actions">
+        <button id="reset-submit-btn" class="btn-primary">Send Reset Link</button>
+        <button id="reset-cancel-btn" class="btn-ghost">Cancel</button>
+      </div>
+    </div>
+
+    <p class="login-footer">
+      &copy; Crimson Global Academy 2026<br>
+      Pre-IG Stage 1 Computer Science
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN APP ═══════════════════ -->
+<div id="app" class="hidden">
+
+  <!-- Title Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="btn-explorer" class="btn-icon header-icon-btn" title="Toggle Explorer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+      </button>
+      <span class="logo-text">PyLab</span>
+    </div>
+    <div class="header-center">
+      <span id="program-title-display" class="program-title-display" title="Click to rename">Untitled Program</span>
+    </div>
+    <div class="header-right">
+      <button id="btn-ref-panel" class="btn-icon header-icon-btn" title="Python Reference">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </button>
+      <button id="btn-theme" class="btn-icon header-icon-btn" title="Toggle theme">
+        <svg id="theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="theme-icon-light" class="hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <span id="theme-label" class="header-label">Dark</span>
+      </button>
+      <button id="btn-font" class="btn-icon header-icon-btn" title="Toggle font">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="header-label">Aa</span>
+      </button>
+      <button id="btn-dashboard" class="btn-icon header-icon-btn teacher-only hidden" title="Teacher Dashboard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </button>
+      <button id="btn-admin" class="btn-icon header-icon-btn superadmin-only hidden" title="Admin Panel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </button>
+      <div class="user-info">
+        <span id="user-role-badge" class="role-badge"></span>
+        <span id="user-name-display" class="user-name"></span>
+      </div>
+      <button id="btn-logout" class="btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div class="app-body">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Explorer</span>
+        <div class="sidebar-header-actions">
+          <button id="btn-new-program" class="btn-accent btn-sm" title="New program">+ New</button>
+          <button id="btn-close-explorer" class="ref-collapse-btn" title="Hide Explorer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" id="tab-programs" data-view="programs">Programs</button>
+        <button class="sidebar-tab" id="tab-challenges" data-view="challenges">Challenges</button>
+      </div>
+
+      <!-- Programs view -->
+      <div id="sidebar-programs-view">
+        <div class="sidebar-search">
+          <input type="text" id="program-search" placeholder="Search programs…">
+        </div>
+        <div id="program-list" class="program-list">
+          <div class="program-list-empty">No saved programs yet.<br>Click <strong>+ New</strong> to start.</div>
+        </div>
+      </div>
+
+      <!-- Challenges view -->
+      <div id="sidebar-challenges-view" class="hidden">
+        <div class="ch-xp-block">
+          <div class="ch-xp-row">
+            <span id="ch-level-display" class="ch-level">Level 1</span>
+            <span id="ch-xp-display" class="ch-xp">0 XP</span>
+          </div>
+          <div class="ch-xp-bar"><div id="ch-xp-bar-fill" class="ch-xp-bar-fill" style="width:0%"></div></div>
+          <button id="btn-leaderboard" class="btn-leaderboard">🏆 Class Leaderboard</button>
+        </div>
+        <div id="challenge-list" class="challenge-list"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="btn-import-py" class="btn-ghost btn-sm sidebar-btn" title="Import .py file">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import .py
+        </button>
+        <button id="btn-export-py" class="btn-ghost btn-sm sidebar-btn" title="Export as .py">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export .py
+        </button>
+        <input type="file" id="file-input-py" accept=".py,.txt" class="hidden">
+      </div>
+    </aside>
+
+    <!-- ── Editor Area ── -->
+    <main class="editor-main">
+
+      <!-- Tab Bar -->
+      <div class="editor-tabbar">
+        <div class="editor-tab active" id="active-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          <span id="tab-filename">untitled.py</span>
+          <span id="tab-dirty" class="tab-dirty hidden">●</span>
+        </div>
+        <div class="tabbar-actions">
+          <button id="btn-save" class="btn-ghost btn-sm" title="Save (Ctrl+S)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save
+          </button>
+          <span id="save-status" class="save-status"></span>
+        </div>
+      </div>
+
+      <!-- Run Toolbar -->
+      <div class="editor-toolbar">
+        <div class="toolbar-left">
+          <button id="btn-run" class="btn-run" title="Run (F5)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run
+          </button>
+          <button id="btn-stop" class="btn-stop hidden" title="Stop (Esc)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18"/></svg>
+            Stop
+          </button>
+          <div class="toolbar-sep"></div>
+          <span id="pep8-indicator" class="pep8-indicator" title="PEP 8 style hints"></span>
+        </div>
+        <div class="toolbar-right">
+          <label class="toolbar-check" title="Check snake_case">
+            <input type="checkbox" id="check-snake-case" checked>
+            <span>snake_case</span>
+          </label>
+          <label class="toolbar-check" title="Auto-indent">
+            <input type="checkbox" id="auto-indent" checked>
+            <span>Auto-indent</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Challenge Row -->
+      <div class="ch-row">
+        <div id="challenge-panel" class="challenge-panel hidden">
+          <div class="ch-panel-header">
+            <div class="ch-panel-title-row">
+              <span id="ch-panel-title" class="ch-panel-title">Challenge</span>
+              <span id="ch-panel-badge" class="ch-difficulty-badge badge-easy">Easy</span>
+            </div>
+            <div class="ch-panel-actions">
+              <button id="btn-hint" class="btn-ghost btn-sm" title="Show hint">💡 Hint</button>
+              <button id="btn-close-challenge" class="btn-ghost btn-sm" title="Close challenge">✕</button>
+            </div>
+          </div>
+          <div id="ch-panel-body" class="ch-panel-body"></div>
+          <div id="ch-test-results" class="ch-test-results"></div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor-debug-row">
+        <div class="code-editor-wrap" id="code-editor-wrap">
+          <div class="editor-container">
+            <div class="editor-gutter" id="editor-gutter"></div>
+            <div class="editor-inner">
+              <div class="editor-highlight" id="editor-highlight" aria-hidden="true"></div>
+              <textarea
+                id="code-editor"
+                class="editor-textarea"
+                spellcheck="false"
+                autocorrect="off"
+                autocapitalize="off"
+                autocomplete="off"
+                placeholder="# Write your Python 3 code here…"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Resize Handle -->
+      <div class="panel-resize-handle" id="panel-resize-handle" title="Drag to resize panel"></div>
+
+      <!-- Output Panel -->
+      <div class="output-panel" id="output-panel">
+        <img src="assets/sammy_snake_snoozing.png" class="console-robot" id="console-mascot" alt="Sammy the Python Snake" aria-hidden="true" onerror="this.style.display='none'">
+        <div class="output-tabs">
+          <button class="output-tab active" data-panel="console">Console</button>
+          <button class="output-tab" data-panel="turtle">Turtle</button>
+          <button class="output-tab" data-panel="errors">Problems <span id="error-badge" class="badge hidden">0</span></button>
+          <button id="btn-clear-output" class="btn-ghost btn-sm output-clear">Clear</button>
+        </div>
+        <div class="output-content" id="output-console">
+          <div class="output-placeholder">Program output will appear here…</div>
+        </div>
+        <div class="output-content hidden" id="output-turtle">
+          <canvas id="turtle-canvas" width="500" height="400"></canvas>
+        </div>
+        <div class="output-content hidden" id="output-errors">
+          <div class="output-placeholder">No problems detected.</div>
+        </div>
+        <!-- Input row (shown when program requests input()) -->
+        <div id="input-row" class="input-row hidden">
+          <span class="input-prompt" id="input-prompt-text">&gt;</span>
+          <input type="text" id="runtime-input" class="runtime-input" autocomplete="off" spellcheck="false">
+          <button id="runtime-input-submit" class="btn-accent btn-sm">Enter</button>
+        </div>
+      </div>
+
+    </main><!-- end editor-main -->
+
+    <!-- ── Python Reference Panel ── -->
+    <aside id="ref-panel" class="ref-panel ref-panel--open">
+      <div class="ref-panel-header">
+        <span class="ref-panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Python 3 Reference
+        </span>
+        <button id="btn-close-ref" class="ref-collapse-btn" title="Hide reference panel">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="ref-panel-body">
+        <p class="ref-intro">Python 3 quick reference for Pre-IG Stage 1.</p>
+
+        <details class="ref-section" open>
+          <summary class="ref-section-title">Variables &amp; Data Types</summary>
+          <div class="ref-section-body">
+            <p class="ref-label">Assignment:</p>
+            <pre class="ref-code">age = 13
+price = 9.99
+name = "Alice"
+is_active = True</pre>
+            <p class="ref-label">Data types:</p>
+            <table class="ref-table">
+              <tr><td><code>int</code></td><td>Whole numbers: <code>5</code>, <code>-3</code></td></tr>
+              <tr><td><code>float</code></td><td>Decimals: <code>3.14</code></td></tr>
+              <tr><td><code>str</code></td><td>Text: <code>"hello"</code></td></tr>
+              <tr><td><code>bool</code></td><td><code>True</code> or <code>False</code></td></tr>
+            </table>
+            <p class="ref-note">Use snake_case for variable names: <code>my_age</code>, <code>first_name</code></p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Input &amp; Output</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">print("Hello, World!")
+name = input("Enter your name: ")
+print("Hello,", name)</pre>
+            <p class="ref-label">f-strings (format strings):</p>
+            <pre class="ref-code">score = 95
+print(f"Your score is {score}")</pre>
+            <p class="ref-label">Concatenation:</p>
+            <pre class="ref-code">greeting = "Hello, " + name + "!"</pre>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Type Casting</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">age = int(input("Enter age: "))
+price = float(input("Price: "))
+text = str(42)   # "42"
+count = int(3.7) # 3 (truncates)</pre>
+            <p class="ref-note">Always cast <code>input()</code> to the correct type before arithmetic.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Comments</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code"># This is a single-line comment
+x = 5  # inline comment</pre>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Operators</summary>
+          <div class="ref-section-body">
+            <p class="ref-label">Arithmetic:</p>
+            <table class="ref-table">
+              <tr><td><code>+</code></td><td>Addition</td></tr>
+              <tr><td><code>-</code></td><td>Subtraction</td></tr>
+              <tr><td><code>*</code></td><td>Multiplication</td></tr>
+              <tr><td><code>/</code></td><td>Division (float result)</td></tr>
+              <tr><td><code>//</code></td><td>Integer (floor) division</td></tr>
+              <tr><td><code>%</code></td><td>Modulus (remainder)</td></tr>
+              <tr><td><code>**</code></td><td>Exponent / power</td></tr>
+            </table>
+            <p class="ref-label">Comparison:</p>
+            <table class="ref-table">
+              <tr><td><code>==</code></td><td>Equal to</td></tr>
+              <tr><td><code>!=</code></td><td>Not equal to</td></tr>
+              <tr><td><code>&lt;</code></td><td>Less than</td></tr>
+              <tr><td><code>&gt;</code></td><td>Greater than</td></tr>
+              <tr><td><code>&lt;=</code></td><td>Less than or equal</td></tr>
+              <tr><td><code>&gt;=</code></td><td>Greater than or equal</td></tr>
+            </table>
+            <p class="ref-label">Logical:</p>
+            <table class="ref-table">
+              <tr><td><code>and</code></td><td>Both conditions true</td></tr>
+              <tr><td><code>or</code></td><td>Either condition true</td></tr>
+              <tr><td><code>not</code></td><td>Negates condition</td></tr>
+            </table>
+            <p class="ref-note"><strong>Assignment</strong> uses <code>=</code>. <strong>Equality test</strong> uses <code>==</code>.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Selection — if / elif / else</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">if score >= 90:
+    print("A grade")
+elif score >= 70:
+    print("B grade")
+else:
+    print("Try again")</pre>
+            <p class="ref-note">Always use 4 spaces for indentation. The colon <code>:</code> is required.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Iteration — for loop</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">for i in range(5):
+    print(i)       # 0 1 2 3 4
+
+for i in range(1, 6):
+    print(i)       # 1 2 3 4 5
+
+for i in range(0, 10, 2):
+    print(i)       # 0 2 4 6 8</pre>
+            <p class="ref-note">Use <code>for</code> when the number of iterations is known.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Iteration — while loop</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">count = 1
+while count <= 5:
+    print(count)
+    count += 1</pre>
+            <p class="ref-note">Use <code>while</code> when iterations depend on a condition.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Lists</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code"># Create
+fruits = []               # empty list
+colours = ["red", "blue"]
+
+# Access (0-indexed)
+print(colours[0])         # "red"
+print(colours[-1])        # last: "blue"
+
+# Modify
+fruits.append("apple")
+fruits.remove("apple")
+del fruits[0]
+
+# Loop
+for fruit in fruits:
+    print(fruit)
+
+# Length
+print(len(fruits))</pre>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Functions</summary>
+          <div class="ref-section-body">
+            <p class="ref-label">Void (procedure):</p>
+            <pre class="ref-code">def greet(name):
+    print(f"Hello, {name}!")
+
+greet("Alice")</pre>
+            <p class="ref-label">With return value:</p>
+            <pre class="ref-code">def add(a, b):
+    return a + b
+
+result = add(3, 4)
+print(result)  # 7</pre>
+            <p class="ref-label">No parameters:</p>
+            <pre class="ref-code">def print_header():
+    print("=" * 20)
+    print("CGA PyLab")
+    print("=" * 20)</pre>
+            <p class="ref-note">Function names use snake_case. Call before using if defined below.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Built-in Functions</summary>
+          <div class="ref-section-body">
+            <table class="ref-table">
+              <tr><td><code>print()</code></td><td>Display output</td></tr>
+              <tr><td><code>input()</code></td><td>Read keyboard input (always str)</td></tr>
+              <tr><td><code>int()</code></td><td>Convert to integer</td></tr>
+              <tr><td><code>float()</code></td><td>Convert to float</td></tr>
+              <tr><td><code>str()</code></td><td>Convert to string</td></tr>
+              <tr><td><code>len()</code></td><td>Length of string or list</td></tr>
+              <tr><td><code>range()</code></td><td>Generate number sequence</td></tr>
+              <tr><td><code>round()</code></td><td>Round to n decimal places</td></tr>
+              <tr><td><code>abs()</code></td><td>Absolute value</td></tr>
+              <tr><td><code>max()</code></td><td>Largest value</td></tr>
+              <tr><td><code>min()</code></td><td>Smallest value</td></tr>
+              <tr><td><code>type()</code></td><td>Returns type of a value</td></tr>
+            </table>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">PEP 8 Conventions</summary>
+          <div class="ref-section-body">
+            <table class="ref-table">
+              <tr><td>Variables</td><td><code>snake_case</code></td></tr>
+              <tr><td>Functions</td><td><code>snake_case</code></td></tr>
+              <tr><td>Constants</td><td><code>UPPER_CASE</code></td></tr>
+              <tr><td>Indentation</td><td>4 spaces</td></tr>
+              <tr><td>Spaces around <code>=</code></td><td><code>x = 5</code> ✓</td></tr>
+              <tr><td>Comment style</td><td><code># space then text</code></td></tr>
+            </table>
+          </div>
+        </details>
+
+        <details class="ref-section">
+          <summary class="ref-section-title">Turtle Graphics</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">import turtle
+
+t = turtle.Turtle()
+t.forward(100)
+t.right(90)
+t.forward(100)
+t.color("blue")
+t.pensize(3)
+
+# Draw a square
+for i in range(4):
+    t.forward(100)
+    t.right(90)</pre>
+            <table class="ref-table">
+              <tr><td><code>t.forward(n)</code></td><td>Move forward n pixels</td></tr>
+              <tr><td><code>t.backward(n)</code></td><td>Move backward n pixels</td></tr>
+              <tr><td><code>t.right(angle)</code></td><td>Turn right by angle°</td></tr>
+              <tr><td><code>t.left(angle)</code></td><td>Turn left by angle°</td></tr>
+              <tr><td><code>t.penup()</code></td><td>Lift pen (no drawing)</td></tr>
+              <tr><td><code>t.pendown()</code></td><td>Put pen down</td></tr>
+              <tr><td><code>t.color("red")</code></td><td>Set pen colour</td></tr>
+              <tr><td><code>t.fillcolor("blue")</code></td><td>Set fill colour</td></tr>
+              <tr><td><code>t.begin_fill()</code></td><td>Start filled shape</td></tr>
+              <tr><td><code>t.end_fill()</code></td><td>End filled shape</td></tr>
+              <tr><td><code>t.circle(r)</code></td><td>Draw circle radius r</td></tr>
+              <tr><td><code>t.goto(x, y)</code></td><td>Move to position</td></tr>
+              <tr><td><code>t.speed(n)</code></td><td>Speed 0=fast, 1=slow</td></tr>
+            </table>
+          </div>
+        </details>
+
+      </div><!-- end ref-panel-body -->
+    </aside>
+
+  </div><!-- end app-body -->
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span id="status-line-col">Ln 1, Col 1</span>
+    <span class="status-sep">|</span>
+    <span id="status-exec-state">Ready</span>
+    <span class="status-sep">|</span>
+    <span>Python 3</span>
+    <span class="status-sep">|</span>
+    <span>UTF-8</span>
+    <span class="status-sep status-right-start">|</span>
+    <button id="btn-class-code" class="status-btn student-only hidden" title="Change class code">
+      Class: <span id="status-class-code">—</span>
+    </button>
+  </div>
+
+</div><!-- end app -->
+
+<!-- ═══════════════════ TEACHER DASHBOARD OVERLAY ═══════════════════ -->
+<div id="teacher-dashboard" class="overlay-panel hidden">
+  <div class="overlay-header">
+    <span class="overlay-title">Teacher Dashboard</span>
+    <button id="btn-close-dashboard" class="btn-ghost btn-sm">✕ Close</button>
+  </div>
+  <div id="dashboard-grid" class="dashboard-grid"></div>
+</div>
+
+<!-- ═══════════════════ ADMIN PANEL OVERLAY ═══════════════════ -->
+<div id="admin-panel" class="overlay-panel hidden">
+  <div class="overlay-header">
+    <span class="overlay-title">Admin Panel — User Management</span>
+    <button id="btn-close-admin" class="btn-ghost btn-sm">✕ Close</button>
+  </div>
+  <div id="admin-content" class="admin-content"></div>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- Rename program modal -->
+<div id="rename-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3 class="modal-title">Rename Program</h3>
+    <input type="text" id="rename-input" class="modal-input" placeholder="Program name">
+    <div class="modal-actions">
+      <button id="rename-confirm" class="btn-primary">Rename</button>
+      <button id="rename-cancel" class="btn-ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Class code modal -->
+<div id="class-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3 class="modal-title">Update Class Code</h3>
+    <input type="text" id="class-input" class="modal-input" placeholder="e.g. CS9A-2026">
+    <div class="modal-actions">
+      <button id="class-confirm" class="btn-primary">Save</button>
+      <button id="class-cancel" class="btn-ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leaderboard modal -->
+<div id="leaderboard-modal" class="modal-overlay hidden">
+  <div class="modal-card modal-card--wide">
+    <h3 class="modal-title">🏆 Class Leaderboard</h3>
+    <div id="leaderboard-content"></div>
+    <div class="modal-actions">
+      <button id="leaderboard-close" class="btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Badge Toast -->
+<div id="badge-toast" class="badge-toast hidden">
+  <span class="badge-toast-icon">🏅</span>
+  <div class="badge-toast-text">
+    <strong id="badge-toast-title">New Badge!</strong>
+    <span id="badge-toast-desc"></span>
+  </div>
+</div>
+
+<!-- Skulpt Python runtime -->
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+<!-- App modules -->
+<script type="module" src="scripts/app.js"></script>
+
+</body>
+</html>
