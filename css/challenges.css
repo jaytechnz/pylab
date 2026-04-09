@@ -1,0 +1,186 @@
+/* ============================================================
+   challenges.css — Exercise sidebar list
+   ============================================================ */
+
+.challenge-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.35rem 0;
+}
+
+/* Category group */
+.ch-category {
+  margin-bottom: 0.25rem;
+}
+
+.ch-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  gap: 0.5rem;
+  transition: background var(--transition);
+}
+.ch-category-header:hover { background: var(--sidebar-hover); }
+
+.ch-category-name {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--sidebar-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex: 1;
+}
+
+.ch-category-progress {
+  font-size: 0.7rem;
+  color: var(--sidebar-text-muted);
+}
+
+.ch-category-chevron {
+  color: var(--sidebar-text-muted);
+  font-size: 0.65rem;
+  transition: transform var(--transition);
+}
+.ch-category.open .ch-category-chevron { transform: rotate(90deg); }
+
+.ch-category-bar {
+  height: 3px;
+  margin: 0 0.75rem 0.25rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ch-category-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.ch-exercise-list {
+  display: none;
+  padding-bottom: 0.25rem;
+}
+.ch-category.open .ch-exercise-list { display: block; }
+
+.ch-exercise-item {
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem 0.35rem 1.25rem;
+  cursor: pointer;
+  gap: 0.5rem;
+  transition: background var(--transition);
+  border-left: 2px solid transparent;
+}
+.ch-exercise-item:hover { background: var(--sidebar-hover); }
+.ch-exercise-item.active {
+  background: var(--sidebar-active);
+  border-left-color: var(--accent);
+}
+.ch-exercise-item.completed { opacity: 0.7; }
+.ch-exercise-item.completed .ch-ex-name { text-decoration: line-through; }
+
+.ch-ex-status {
+  font-size: 0.75rem;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ch-ex-name {
+  font-size: 0.78rem;
+  color: var(--sidebar-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-ex-diff {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.diff-easy   { background: rgba(22,101,52,0.35);  color: #4ADE80; }
+.diff-medium { background: rgba(133,77,14,0.35);  color: #FDE68A; }
+.diff-hard   { background: rgba(153,27,27,0.35);  color: #FCA5A5; }
+
+.ch-ex-xp {
+  font-size: 0.65rem;
+  color: var(--sidebar-text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Hint panel inside challenge body ── */
+.ch-hint {
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg-card);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: none;
+}
+.ch-hint.visible { display: block; }
+.ch-hint-label {
+  font-weight: 700;
+  color: var(--gold);
+  font-size: 0.72rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Test results ── */
+.ch-test-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
+}
+
+.ch-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.45rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.ch-submit-btn:hover { background: var(--accent-hover); }
+.ch-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ch-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  border-radius: var(--radius);
+  color: var(--success);
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin-top: 0.5rem;
+}
+
+.ch-xp-award {
+  font-size: 0.78rem;
+  color: var(--gold);
+  font-weight: 700;
+}
