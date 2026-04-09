@@ -49,13 +49,7 @@ const errorsPanel       = $('output-errors');
 const errorBadge        = $('error-badge');
 const outputTabs        = document.querySelectorAll('.output-tab');
 const clearOutputBtn    = $('btn-clear-output');
-const turtleCanvas      = $('turtle-canvas');
 const consoleMascot     = $('console-mascot');
-
-const inputRow          = $('input-row');
-const inputPromptText   = $('input-prompt-text');
-const runtimeInput      = $('runtime-input');
-const runtimeSubmit     = $('runtime-input-submit');
 
 const renameModal       = $('rename-modal');
 const renameInput       = $('rename-input');
@@ -122,7 +116,7 @@ const editor = new Editor({
 
 // ── Python Runner ─────────────────────────────────────────────────────────────
 
-let _inputResolve = null;
+let _activeInputEl = null;  // the inline <input> currently awaiting user input
 
 const runner = new PythonRunner({
   onOutput: (text, type) => appendOutput(text, type),
@@ -134,17 +128,39 @@ const runner = new PythonRunner({
     setRunning(false);
     saveSessionData(editor.getValue(), false);
   },
-  onInputRequest: (prompt) => {
+  onInputRequest: (_prompt) => {
+    // _prompt was already printed to console by runner.js onOutput call
     return new Promise(resolve => {
-      _inputResolve = resolve;
-      if (inputPromptText) inputPromptText.textContent = prompt || '▶';
-      inputRow?.classList.remove('hidden');
-      runtimeInput?.focus();
-      // Switch to console tab
       setOutputTab('console');
+
+      const inputEl = document.createElement('input');
+      inputEl.type = 'text';
+      inputEl.className = 'console-inline-input';
+      inputEl.autocomplete = 'off';
+      inputEl.spellcheck = false;
+      outputConsole.appendChild(inputEl);
+      outputConsole.scrollTop = outputConsole.scrollHeight;
+      inputEl.focus();
+      _activeInputEl = inputEl;
+
+      function submit() {
+        const val = inputEl.value;
+        // Replace input with echoed text
+        const echo = document.createElement('span');
+        echo.className = 'output-line out-stdin';
+        echo.textContent = val;
+        outputConsole.replaceChild(echo, inputEl);
+        outputConsole.appendChild(document.createElement('br'));
+        _activeInputEl = null;
+        resolve(val);
+      }
+
+      inputEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); submit(); }
+      });
     });
   },
-  turtleCanvas
+  turtleTarget: outputTurtle,
 });
 
 // ── Challenges ────────────────────────────────────────────────────────────────
@@ -462,9 +478,7 @@ async function handleRun() {
   const hasTurtle = /\bimport\s+turtle\b|\bfrom\s+turtle\b/.test(source);
   if (hasTurtle) {
     setOutputTab('turtle');
-    // Clear canvas
-    const ctx = turtleCanvas?.getContext('2d');
-    if (ctx) ctx.clearRect(0, 0, turtleCanvas.width, turtleCanvas.height);
+    if (outputTurtle) outputTurtle.innerHTML = '';  // Skulpt will create a fresh canvas
   } else {
     setOutputTab('console');
   }
@@ -476,8 +490,12 @@ async function handleRun() {
 function stopRun() {
   runner.stop();
   setRunning(false);
+  // Remove any pending inline input and resolve it
+  if (_activeInputEl) {
+    _activeInputEl.remove();
+    _activeInputEl = null;
+  }
   appendOutput('\n[Execution stopped]', 'info');
-  hideInputRow();
 }
 
 function setRunning(running) {
@@ -489,25 +507,6 @@ function setRunning(running) {
     ? 'assets/sammy_snake_presenter.png'
     : 'assets/sammy_snake_snoozing.png';
 }
-
-// ── Runtime input ─────────────────────────────────────────────────────────────
-
-function hideInputRow() {
-  inputRow?.classList.add('hidden');
-  if (_inputResolve) { _inputResolve(''); _inputResolve = null; }
-}
-
-function submitInput() {
-  const val = runtimeInput?.value ?? '';
-  if (runtimeInput) runtimeInput.value = '';
-  hideInputRow();
-  if (_inputResolve) { _inputResolve(val); _inputResolve = null; }
-}
-
-runtimeSubmit?.addEventListener('click', submitInput);
-runtimeInput?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') submitInput();
-});
 
 // ── Admin-created user event (restore session note) ───────────────────────────
 window.addEventListener('admin-created-user', e => {
@@ -551,9 +550,9 @@ function clearOutput() {
   if (outputConsole) outputConsole.innerHTML = '<div class="output-placeholder">Program output will appear here…</div>';
   if (errorsPanel) errorsPanel.innerHTML = '<div class="output-placeholder">No problems detected.</div>';
   if (errorBadge) { errorBadge.textContent = '0'; errorBadge.classList.add('hidden'); }
-  // Clear turtle canvas
-  const ctx = turtleCanvas?.getContext('2d');
-  if (ctx) ctx.clearRect(0, 0, turtleCanvas?.width ?? 500, turtleCanvas?.height ?? 400);
+  // Clear turtle div (Skulpt recreates its canvas on next run)
+  if (outputTurtle) outputTurtle.innerHTML = '';
+  _activeInputEl = null;
 }
 
 function showErrorInPanel(msg) {

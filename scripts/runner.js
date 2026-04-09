@@ -50,12 +50,12 @@ export function pep8Lint(source) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export class PythonRunner {
-  constructor({ onOutput, onError, onComplete, onInputRequest, turtleCanvas }) {
+  constructor({ onOutput, onError, onComplete, onInputRequest, turtleTarget }) {
     this.onOutput       = onOutput;         // (text, type) → void
     this.onError        = onError;          // (msg, lineno) → void
     this.onComplete     = onComplete;       // () → void
     this.onInputRequest = onInputRequest;   // (prompt) → Promise<string>
-    this.turtleCanvas   = turtleCanvas;     // <canvas> element
+    this.turtleTarget   = turtleTarget;     // container div element (Skulpt injects canvas here)
 
     this._running = false;
     this._outputLines = 0;
@@ -128,13 +128,12 @@ export class PythonRunner {
       __future__: Sk.python3,
     });
 
-    // Set up Turtle canvas if present
-    if (this.turtleCanvas) {
+    // Set up Turtle graphics — target must be a container div; Skulpt creates the canvas inside it
+    if (this.turtleTarget) {
       Sk.TurtleGraphics = {
-        target:  this.turtleCanvas,
-        width:   this.turtleCanvas.width,
-        height:  this.turtleCanvas.height,
-        animate: false,
+        target: this.turtleTarget,
+        width:  500,
+        height: 400,
       };
     }
 
