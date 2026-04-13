@@ -526,10 +526,10 @@ function _showStudentDrillDown(grid, student) {
 
   // Category breakdown bars
   const catBars = CATEGORIES.map(cat => {
-    const catExs    = EXERCISES.filter(e => e.category === cat.id);
-    const catDone   = catExs.filter(e => prog.completed?.[e.id]).length;
-    const pct       = catExs.length ? Math.round((catDone / catExs.length) * 100) : 0;
-    const barCol    = pct >= 70 ? 'var(--accent)' : pct >= 40 ? 'var(--warning)' : 'var(--error)';
+    const catExs  = EXERCISES.filter(e => e.category === cat.id);
+    const catDone = catExs.filter(e => prog.completed?.[e.id]).length;
+    const pct     = catExs.length ? Math.round((catDone / catExs.length) * 100) : 0;
+    const barCol  = pct >= 70 ? 'var(--accent)' : pct >= 40 ? 'var(--warning)' : 'var(--error)';
     return `<div class="dash-progress-row">
       <span class="dash-progress-label">${cat.icon} ${cat.label}</span>
       <div class="dash-progress-bar-wrap"><div class="dash-progress-bar" style="width:${pct}%;background:${barCol}"></div></div>
@@ -537,44 +537,80 @@ function _showStudentDrillDown(grid, student) {
     </div>`;
   }).join('');
 
-  // Stuck exercises (5+ attempts, not complete)
-  const attempts = prog.attempts ?? {};
-  const stuck = Object.entries(attempts)
-    .filter(([id, count]) => count >= 3 && !prog.completed?.[id])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([id, count]) => {
-      const ex = EXERCISES.find(e => e.id === id);
-      return `<div class="stuck-item">
-        <span class="stuck-name">${escHtml(ex?.title ?? id)}</span>
-        <span class="stuck-cat">${ex?.category ?? ''}</span>
-        <span class="stuck-count">${count} attempts</span>
-      </div>`;
+  // Completed exercises — sorted by completedAt descending
+  const completedRows = EXERCISES
+    .filter(ex => prog.completed?.[ex.id])
+    .sort((a, b) => (prog.completed[b.id].completedAt ?? 0) - (prog.completed[a.id].completedAt ?? 0))
+    .map(ex => {
+      const completedAt = prog.completed[ex.id].completedAt;
+      const dateStr = completedAt ? new Date(completedAt).toLocaleDateString('en-GB') : '—';
+      const hasCode = !!prog.submissions?.[ex.id]?.code;
+      return `<tr class="ex-row ${hasCode ? 'ex-row--clickable' : ''}" data-ex-id="${ex.id}" data-state="done">
+        <td><span class="ex-status-dot done">✓</span></td>
+        <td>${escHtml(ex.title)}</td>
+        <td class="ex-cat">${escHtml(ex.category)}</td>
+        <td class="ex-date">${dateStr}</td>
+        <td>${hasCode ? '<span class="ex-view-code">View code ›</span>' : '<span class="ex-no-code">—</span>'}</td>
+      </tr>`;
     }).join('');
 
-  // Badges earned
-  const badges = (prog.badges ?? []).join(', ') || 'None yet';
+  // In-progress exercises — attempted but not completed, sorted by attempt count desc
+  const attempts = prog.attempts ?? {};
+  const inProgressRows = EXERCISES
+    .filter(ex => attempts[ex.id] && !prog.completed?.[ex.id])
+    .sort((a, b) => (attempts[b.id] ?? 0) - (attempts[a.id] ?? 0))
+    .map(ex => {
+      const count  = attempts[ex.id] ?? 0;
+      const hasCode = !!prog.submissions?.[ex.id]?.code;
+      return `<tr class="ex-row ${hasCode ? 'ex-row--clickable' : ''}" data-ex-id="${ex.id}" data-state="progress">
+        <td><span class="ex-status-dot progress">…</span></td>
+        <td>${escHtml(ex.title)}</td>
+        <td class="ex-cat">${escHtml(ex.category)}</td>
+        <td class="ex-date">${count} attempt${count !== 1 ? 's' : ''}</td>
+        <td>${hasCode ? '<span class="ex-view-code">View code ›</span>' : '<span class="ex-no-code">—</span>'}</td>
+      </tr>`;
+    }).join('');
+
+  const exTable = (rows, emptyMsg) => rows
+    ? `<div class="ex-table-wrap"><table class="ex-table">
+        <thead><tr><th></th><th>Exercise</th><th>Topic</th><th>Date / Attempts</th><th>Code</th></tr></thead>
+        <tbody>${rows}</tbody>
+       </table></div>`
+    : `<p class="feedback-empty">${emptyMsg}</p>`;
 
   const html = `<div class="student-drilldown-panel">
     <div class="drilldown-header">
       <strong>${escHtml(student.displayName ?? student.email)}</strong>
-      <span class="drilldown-stats">${done} exercises · ${xp} XP · ${hints} hints used</span>
+      <span class="drilldown-stats">${done} completed · ${xp} XP · ${hints} hints used</span>
       <button class="btn-ghost btn-sm drilldown-close-btn">✕ Close</button>
     </div>
-    <div class="drilldown-body">
-      <div class="drilldown-section">
-        <div class="drilldown-section-title">Topic Breakdown</div>
-        <div class="dash-progress-list">${catBars}</div>
+    <div class="drilldown-body drilldown-body--cols">
+
+      <div class="drilldown-col-narrow">
+        <div class="drilldown-section">
+          <div class="drilldown-section-title">Topic Breakdown</div>
+          <div class="dash-progress-list">${catBars}</div>
+        </div>
       </div>
-      <div class="drilldown-section">
-        <div class="drilldown-section-title">Struggling Exercises (3+ attempts, incomplete)</div>
-        ${stuck || '<p class="feedback-empty">No stuck exercises.</p>'}
-        ${stuck ? '<div class="stuck-list">' + stuck + '</div>' : ''}
+
+      <div class="drilldown-col-wide">
+        <div class="drilldown-section">
+          <div class="drilldown-section-title">In Progress (${Object.keys(inProgressRows ? attempts : {}).length} exercises)</div>
+          ${exTable(inProgressRows, 'No exercises in progress.')}
+        </div>
+        <div class="drilldown-section">
+          <div class="drilldown-section-title">Completed (${done} exercises)</div>
+          ${exTable(completedRows, 'No completed exercises yet.')}
+        </div>
       </div>
-      <div class="drilldown-section">
-        <div class="drilldown-section-title">Badges Earned</div>
-        <p class="drilldown-badges">${escHtml(badges)}</p>
+
+    </div>
+    <div class="code-viewer hidden" id="code-viewer-${escHtml(student.uid)}">
+      <div class="code-viewer-header">
+        <span class="code-viewer-title" id="code-viewer-title-${escHtml(student.uid)}"></span>
+        <button class="btn-ghost btn-sm code-viewer-close">✕</button>
       </div>
+      <pre class="code-viewer-body" id="code-viewer-body-${escHtml(student.uid)}"></pre>
     </div>
   </div>`;
 
@@ -590,10 +626,39 @@ function _showStudentDrillDown(grid, student) {
   }
   container.dataset.uid = student.uid;
   container.innerHTML = html;
+
   container.querySelector('.drilldown-close-btn')?.addEventListener('click', () => {
     container.innerHTML = '';
     container.dataset.uid = '';
   });
+
+  // Code viewer
+  const viewer      = container.querySelector(`#code-viewer-${student.uid}`);
+  const viewerTitle = container.querySelector(`#code-viewer-title-${student.uid}`);
+  const viewerBody  = container.querySelector(`#code-viewer-body-${student.uid}`);
+
+  container.querySelector('.code-viewer-close')?.addEventListener('click', () => {
+    viewer?.classList.add('hidden');
+  });
+
+  container.querySelectorAll('.ex-row--clickable').forEach(row => {
+    row.addEventListener('click', () => {
+      const exId = row.dataset.exId;
+      const ex   = EXERCISES.find(e => e.id === exId);
+      const code = prog.submissions?.[exId]?.code ?? '';
+      if (!code || !viewer) return;
+
+      // Highlight currently selected row
+      container.querySelectorAll('.ex-row--clickable').forEach(r => r.classList.remove('ex-row--active'));
+      row.classList.add('ex-row--active');
+
+      if (viewerTitle) viewerTitle.textContent = `${student.displayName ?? student.email} — ${ex?.title ?? exId}`;
+      if (viewerBody)  viewerBody.textContent  = code;
+      viewer.classList.remove('hidden');
+      viewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
