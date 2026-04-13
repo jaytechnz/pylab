@@ -5,7 +5,7 @@
 .dashboard-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 1.25rem;
@@ -20,10 +20,7 @@
   padding: 1.1rem 1.25rem;
   overflow: hidden;
 }
-
-.dash-card--wide {
-  grid-column: 1 / -1;
-}
+.dash-card--wide { grid-column: 1 / -1; }
 
 .dash-card-title {
   font-size: 0.8rem;
@@ -37,30 +34,41 @@
   gap: 0.5rem;
 }
 .dash-card-title svg { flex-shrink: 0; }
+.dash-card-sub {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+  margin-left: 0.5rem;
+}
 
-.dash-loading {
-  text-align: center;
+.dash-sub-note {
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
-  padding: 3rem;
   font-style: italic;
 }
-.dash-error { color: var(--error); padding: 1rem; }
 
-/* ── Class filter ── */
+.dash-loading { text-align: center; color: var(--text-muted); padding: 3rem; font-style: italic; }
+.dash-error   { color: var(--error); padding: 1rem; }
+
+/* ── Toolbar (filter + export) ── */
+.dash-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 .dash-filter-bar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0 1.5rem 0;
-  margin-bottom: 0.5rem;
-  flex-shrink: 0;
   flex-wrap: wrap;
 }
-.dash-filter-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
+.dash-filter-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); }
 .dash-filter-btn {
   padding: 0.3rem 0.75rem;
   border: 1px solid var(--border);
@@ -78,222 +86,248 @@
   color: var(--accent-text);
   font-weight: 700;
 }
+.dash-export-btn { font-size: 0.75rem; }
 
 /* ── Stat row ── */
-.dash-stat-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.dash-stat {
-  flex: 1;
-  min-width: 80px;
-  text-align: center;
-}
+.dash-stat-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.dash-stat { flex: 1; min-width: 70px; text-align: center; }
 .dash-stat-val {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-weight: 700;
   color: var(--accent);
   line-height: 1;
 }
-.dash-stat-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 0.25rem;
-}
+.dash-stat--risk .dash-stat-val { color: var(--error); }
+.dash-stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem; }
 
 /* ── Progress bars ── */
-.dash-progress-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.dash-progress-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.78rem;
-}
+.dash-progress-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.dash-progress-row { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; }
 .dash-progress-label {
-  width: 120px;
-  flex-shrink: 0;
-  color: var(--text-secondary);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  width: 130px; flex-shrink: 0;
+  color: var(--text-secondary); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .dash-progress-bar-wrap {
-  flex: 1;
-  height: 8px;
+  flex: 1; height: 8px;
   background: var(--border);
-  border-radius: 999px;
-  overflow: hidden;
+  border-radius: 999px; overflow: hidden;
 }
 .dash-progress-bar {
-  height: 100%;
-  border-radius: 999px;
+  height: 100%; border-radius: 999px;
   background: var(--accent);
   transition: width 0.5s ease;
 }
-.dash-progress-pct {
-  width: 38px;
-  text-align: right;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
+.dash-progress-pct { width: 42px; text-align: right; color: var(--text-muted); flex-shrink: 0; }
 
-/* ── Data table ── */
-.dash-table-wrap {
-  overflow-x: auto;
+/* ── Traffic light ── */
+.tl-container { display: flex; flex-direction: column; gap: 0.6rem; }
+.tl-group { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.tl-group-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem; font-weight: 700; color: #fff;
 }
-
-.dash-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.78rem;
-}
-.dash-table th {
-  text-align: left;
-  padding: 0.4rem 0.6rem;
-  font-weight: 700;
-  color: var(--text-muted);
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.tl-count {
+  margin-left: auto;
+  background: rgba(255,255,255,0.25);
+  border-radius: 999px;
+  padding: 0 0.4rem;
   font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
 }
-.dash-table th:hover { color: var(--text-primary); }
-.dash-table th.sorted { color: var(--accent); }
-.dash-table td {
-  padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid var(--border-light);
-  color: var(--text-primary);
+.tl-ahead    { background: #16a34a; }
+.tl-on-track { background: #d97706; }
+.tl-behind   { background: #dc2626; }
+.tl-names {
+  padding: 0.4rem 0.7rem;
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+  background: var(--bg-card);
 }
-.dash-table tr:hover td { background: var(--bg-card); }
-.dash-table tr:last-child td { border-bottom: none; }
+.tl-name {
+  font-size: 0.72rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+  color: var(--text-secondary);
+}
+.tl-empty { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
 
-/* Skill matrix colours */
-.skill-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+/* ── Activity chart ── */
+.dash-chart-area {
+  width: 100%; min-height: 160px;
+  display: flex; align-items: flex-end; gap: 3px;
+  padding-top: 0.5rem;
 }
-.skill-none    { background: var(--border); }
-.skill-started { background: var(--warning); }
-.skill-done    { background: var(--accent); }
+.dash-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.dash-bar {
+  width: 100%; background: var(--accent);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  min-height: 4px; transition: height 0.5s ease; opacity: 0.85;
+}
+.dash-bar:hover { opacity: 1; }
+.dash-bar-label {
+  font-size: 0.6rem; color: var(--text-muted); text-align: center;
+  transform: rotate(-30deg); transform-origin: top center;
+  white-space: nowrap; margin-top: 2px;
+}
 
-/* ── At-risk students ── */
-.risk-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* ── Exercise Heatmap ── */
+.heatmap-legend {
+  display: flex; gap: 0.75rem; flex-wrap: wrap;
+  font-size: 0.7rem; color: var(--text-muted);
+  margin-bottom: 0.75rem;
 }
+.heatmap-legend-item { display: flex; align-items: center; gap: 0.3rem; }
+.heatmap-legend-dot {
+  width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+}
+.heatmap-categories { display: flex; flex-direction: column; gap: 0.6rem; }
+.heatmap-cat-group { display: flex; align-items: center; gap: 0.75rem; }
+.heatmap-cat-label {
+  width: 180px; flex-shrink: 0;
+  font-size: 0.73rem; font-weight: 600; color: var(--text-secondary);
+}
+.heatmap-cells { display: flex; flex-wrap: wrap; gap: 3px; }
+.heatmap-cell {
+  width: 14px; height: 14px; border-radius: 2px;
+  cursor: default; transition: transform 0.1s;
+}
+.heatmap-cell:hover { transform: scale(1.4); z-index: 2; position: relative; }
+
+/* ── Interventions ── */
+.intervention-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.intervention-item {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+}
+.intervention-icon { font-size: 1.1rem; flex-shrink: 0; line-height: 1.4; }
+.intervention-text { color: var(--text-secondary); line-height: 1.5; }
+.intervention-text strong { color: var(--text-primary); }
+
+/* ── At-risk ── */
+.risk-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .risk-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: flex; align-items: center; gap: 0.75rem;
   padding: 0.5rem 0.6rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.78rem;
 }
-.risk-name { flex: 1; font-weight: 600; color: var(--text-primary); }
+.risk-name   { flex: 1; font-weight: 600; color: var(--text-primary); }
 .risk-detail { color: var(--text-muted); font-size: 0.72rem; }
 .risk-tag {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-  text-transform: uppercase;
+  font-size: 0.65rem; font-weight: 700;
+  padding: 0.1rem 0.4rem; border-radius: 999px; text-transform: uppercase;
 }
 .risk-tag.low    { background: var(--success-bg); color: var(--success); }
 .risk-tag.medium { background: rgba(245,158,11,0.15); color: var(--warning); }
 .risk-tag.high   { background: var(--error-bg); color: var(--error); }
 
-/* ── Student detail sidebar ── */
-.student-detail {
-  grid-column: 1 / -1;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+/* ── Data table ── */
+.dash-table-wrap { overflow-x: auto; }
+.dash-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.dash-table th {
+  text-align: left; padding: 0.4rem 0.6rem;
+  font-weight: 700; color: var(--text-muted);
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+.dash-table th:hover { color: var(--text-primary); }
+.dash-table th.sorted { color: var(--accent); }
+.dash-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+.dash-table tr:hover td { background: var(--bg-card); }
+.dash-table tr:last-child td { border-bottom: none; }
+.dash-table .text-muted { color: var(--text-muted); }
+
+.student-row-clickable { cursor: pointer; }
+.row-risk-high td:first-child { border-left: 3px solid var(--error); }
+.row-risk-med  td:first-child { border-left: 3px solid var(--warning); }
+
+/* Inline progress bar in table cell */
+.td-progress-wrap {
+  position: relative; height: 18px;
+  background: var(--border); border-radius: 999px; overflow: hidden;
+  min-width: 80px;
+}
+.td-progress-bar {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: var(--accent); opacity: 0.7; border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.td-progress-label {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; color: var(--text-primary);
+}
+
+/* Difficulty badge in hardest table */
+.diff-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 700;
+  padding: 0.1rem 0.35rem; border-radius: 3px; text-transform: uppercase;
+}
+.diff-badge.diff-easy   { background: rgba(34,197,94,0.15);  color: var(--accent); }
+.diff-badge.diff-medium { background: rgba(245,158,11,0.15); color: var(--warning); }
+.diff-badge.diff-hard   { background: var(--error-bg); color: var(--error); }
+
+/* ── Student drill-down ── */
+.student-drilldown-panel {
+  margin-top: 1rem;
+  border: 1px solid var(--accent);
   border-radius: var(--radius-lg);
-  padding: 1.1rem 1.25rem;
+  overflow: hidden;
 }
+.drilldown-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.drilldown-header strong { font-size: 0.9rem; color: var(--text-primary); }
+.drilldown-stats { color: var(--text-muted); font-size: 0.75rem; }
+.drilldown-close-btn { margin-left: auto; flex-shrink: 0; }
+.drilldown-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+}
+.drilldown-section { display: flex; flex-direction: column; gap: 0.5rem; }
+.drilldown-section-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+.drilldown-badges { font-size: 0.78rem; color: var(--text-secondary); }
+.stuck-list { display: flex; flex-direction: column; gap: 0.35rem; }
+.stuck-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.stuck-name  { flex: 1; color: var(--text-primary); font-weight: 600; }
+.stuck-cat   { color: var(--text-muted); font-size: 0.68rem; }
+.stuck-count { color: var(--error); font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
 
-/* ── Feedback card ── */
-.feedback-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+/* ── Feedback card (kept for compatibility) ── */
+.feedback-summary { display: flex; flex-direction: column; gap: 0.5rem; }
 .feedback-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  padding: 0.5rem; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
   font-size: 0.78rem;
 }
-.feedback-student { font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+.feedback-student  { font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
 .feedback-exercise { color: var(--accent); flex-shrink: 0; }
-.feedback-text { color: var(--text-secondary); flex: 1; }
-.feedback-empty { color: var(--text-muted); font-style: italic; font-size: 0.78rem; }
-
-/* ── Chart placeholder ── */
-.dash-chart-area {
-  width: 100%;
-  min-height: 160px;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  padding-top: 0.5rem;
-}
-.dash-bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-}
-.dash-bar {
-  width: 100%;
-  background: var(--accent);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  min-height: 4px;
-  transition: height 0.5s ease;
-  opacity: 0.85;
-}
-.dash-bar:hover { opacity: 1; }
-.dash-bar-label {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  text-align: center;
-  transform: rotate(-30deg);
-  transform-origin: top center;
-  white-space: nowrap;
-  margin-top: 2px;
-}
-
-/* ── Teacher feedback panel ── */
-.teacher-feedback-input {
-  width: 100%;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: 0.78rem;
-  resize: vertical;
-  min-height: 60px;
-  outline: none;
-  font-family: var(--font-body);
-}
-.teacher-feedback-input:focus { border-color: var(--accent); }
+.feedback-text     { color: var(--text-secondary); flex: 1; }
+.feedback-empty    { color: var(--text-muted); font-style: italic; font-size: 0.78rem; }
