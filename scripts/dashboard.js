@@ -411,8 +411,8 @@ function _buildInterventionsCard(students) {
 
   const items = suggestions.map(s =>
     `<div class="intervention-item">
-      <span class="intervention-icon">${s.icon}</span>
-      <span class="intervention-text">${s.text}</span>
+      <div class="intervention-icon">${s.icon}</div>
+      <div class="intervention-text">${s.text}</div>
     </div>`
   ).join('');
 
