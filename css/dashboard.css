@@ -467,3 +467,88 @@
 .feedback-exercise { color: var(--accent); flex-shrink: 0; }
 .feedback-text     { color: var(--text-secondary); flex: 1; }
 .feedback-empty    { color: var(--text-muted); font-style: italic; font-size: 0.78rem; }
+
+/* ── Concept Mastery Map ── */
+.mastery-legend {
+  display: flex; flex-wrap: wrap; gap: 0.75rem;
+  margin-bottom: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);
+}
+.mastery-legend-item { display: flex; align-items: center; gap: 0.35rem; }
+.mastery-dot {
+  width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
+}
+.mastery-dot.mastery-mastered { background: var(--accent); }
+.mastery-dot.mastery-partial  { background: var(--warning); }
+.mastery-dot.mastery-low      { background: var(--error); }
+.mastery-dot.mastery-none     { background: var(--border); }
+
+.mastery-table .mastery-cat-header {
+  text-align: center; font-size: 1.1rem; padding: 4px 6px;
+  min-width: 36px;
+}
+.mastery-table .mastery-name {
+  font-size: 0.78rem; white-space: nowrap; padding-right: 0.75rem;
+}
+.mastery-cell {
+  width: 32px; height: 28px; border-radius: 4px; cursor: default;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.mastery-cell.mastery-mastered { background: var(--accent); }
+.mastery-cell.mastery-partial  { background: var(--warning); }
+.mastery-cell.mastery-low      { background: var(--error); }
+.mastery-cell.mastery-none     { background: var(--border); }
+
+/* ── Engagement dots ── */
+.eng-dot {
+  display: inline-block;
+  width: 9px; height: 9px; border-radius: 50%;
+  vertical-align: middle; margin-right: 2px;
+}
+.eng-dot--green { background: var(--accent); }
+.eng-dot--amber { background: var(--warning); }
+.eng-dot--red   { background: var(--error); }
+
+/* ── Resilience card ── */
+.resilience-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;
+}
+@media (max-width: 560px) {
+  .resilience-cols { grid-template-columns: 1fr; }
+}
+.resilience-section-label {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.5rem;
+}
+.resilience-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+.resilience-name {
+  font-size: 0.8rem; font-weight: 600; color: var(--text-primary);
+}
+.resilience-badge {
+  font-size: 0.72rem; padding: 2px 8px; border-radius: 99px;
+  white-space: normal; line-height: 1.4;
+}
+.resilience-badge--good {
+  background: rgba(var(--accent-rgb, 34,197,94), 0.15);
+  color: var(--accent);
+}
+.resilience-badge--warn {
+  background: rgba(var(--error-rgb, 239,68,68), 0.12);
+  color: var(--error);
+}
+
+/* ── Exam readiness ── */
+.exam-weak-topics {
+  font-size: 0.75rem; color: var(--text-secondary);
+  white-space: normal; max-width: 200px;
+}
+
+/* ── Content quality two-column layout ── */
+.content-quality-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 0.25rem;
+}
+@media (max-width: 680px) {
+  .content-quality-cols { grid-template-columns: 1fr; }
+}
