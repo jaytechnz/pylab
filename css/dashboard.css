@@ -478,7 +478,7 @@
   width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
 }
 .mastery-dot.mastery-mastered { background: var(--accent); }
-.mastery-dot.mastery-partial  { background: var(--warning); }
+.mastery-dot.mastery-partial  { background: #f97316; }
 .mastery-dot.mastery-low      { background: var(--error); }
 .mastery-dot.mastery-none     { background: var(--border); }
 
@@ -519,7 +519,7 @@
   border: 1px solid rgba(0,0,0,0.08);
 }
 .mastery-cell.mastery-mastered { background: var(--accent); }
-.mastery-cell.mastery-partial  { background: var(--warning); }
+.mastery-cell.mastery-partial  { background: #f97316; }
 .mastery-cell.mastery-low      { background: var(--error); }
 .mastery-cell.mastery-none     { background: var(--border); }
 
