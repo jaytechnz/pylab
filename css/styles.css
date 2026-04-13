@@ -315,7 +315,7 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 .btn-ghost {
   padding: 0.4rem 0.75rem;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--sidebar-text);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.8rem;
