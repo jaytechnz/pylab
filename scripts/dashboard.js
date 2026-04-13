@@ -6,6 +6,7 @@ import {
   getClassNames, saveClassName
 } from './storage.js';
 import { EXERCISES, CATEGORIES } from './exercises.js';
+import { generateDemoData }       from './demo-data.js';
 
 const TOTAL_EXERCISES = EXERCISES.length;  // 130
 
@@ -15,6 +16,12 @@ let _allProgress = null;
 let _feedback    = null;
 let _classNames  = {};
 let _containerEl = null;
+
+// Demo mode — swaps live Firestore data with generated fake data
+let _isDemoMode   = false;
+let _liveStudents = null;
+let _liveSessions = null;
+let _liveProgress = null;
 
 export async function renderDashboard(containerEl) {
   _containerEl = containerEl;
@@ -31,6 +38,11 @@ export async function renderDashboard(containerEl) {
     containerEl.innerHTML = `<p class="dash-error">Failed to load dashboard: ${escHtml(e.message)}</p>`;
     return;
   }
+  // Save live data so we can restore it after demo mode
+  _liveStudents = _students;
+  _liveSessions = _sessions;
+  _liveProgress = _allProgress;
+  _isDemoMode   = false;
   _render(containerEl, null);
 }
 
@@ -46,23 +58,48 @@ function _render(container, selectedClass) {
   const analytics  = aggregateAnalytics(sessions, students);
   const classCodes = [...new Set(_students.map(s => s.classCode).filter(Boolean))].sort();
 
+  const filterButtons = _isDemoMode
+    ? `<span class="dash-demo-badge">DEMO MODE — 5 sample students</span>`
+    : `<span class="dash-filter-label">Class:</span>
+       <button class="dash-filter-btn ${!selectedClass ? 'active' : ''}" data-class="">All Classes</button>
+       ${classCodes.map(cc => `
+         <button class="dash-filter-btn ${selectedClass === cc ? 'active' : ''}" data-class="${escHtml(cc)}">
+           ${escHtml(_classNames[cc] || cc)}
+         </button>`).join('')}`;
+
+  const demoToggle = _isDemoMode
+    ? `<button class="dash-demo-btn dash-demo-active" id="btn-demo-toggle">← Live Data</button>`
+    : `<button class="dash-demo-btn" id="btn-demo-toggle">Try Demo</button>`;
+
   container.innerHTML = `
     <div class="dash-toolbar">
-      <div class="dash-filter-bar">
-        <span class="dash-filter-label">Class:</span>
-        <button class="dash-filter-btn ${!selectedClass ? 'active' : ''}" data-class="">All Classes</button>
-        ${classCodes.map(cc => `
-          <button class="dash-filter-btn ${selectedClass === cc ? 'active' : ''}" data-class="${escHtml(cc)}">
-            ${escHtml(_classNames[cc] || cc)}
-          </button>`).join('')}
+      <div class="dash-filter-bar">${filterButtons}</div>
+      <div class="dash-toolbar-right">
+        ${demoToggle}
+        <button class="btn-ghost btn-sm dash-export-btn" id="btn-export-csv">Export CSV</button>
       </div>
-      <button class="btn-ghost btn-sm dash-export-btn" id="btn-export-csv">Export CSV</button>
     </div>
     <div class="dashboard-grid" id="dash-inner"></div>
   `;
 
   container.querySelectorAll('.dash-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => _render(container, btn.dataset.class || null));
+  });
+
+  container.querySelector('#btn-demo-toggle')?.addEventListener('click', () => {
+    if (_isDemoMode) {
+      _isDemoMode  = false;
+      _students    = _liveStudents;
+      _sessions    = _liveSessions;
+      _allProgress = _liveProgress;
+    } else {
+      _isDemoMode  = true;
+      const demo   = generateDemoData();
+      _students    = demo.students;
+      _sessions    = demo.sessions;
+      _allProgress = demo.allProgress;
+    }
+    _render(container, null);
   });
 
   container.querySelector('#btn-export-csv')?.addEventListener('click', () =>
