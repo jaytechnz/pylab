@@ -209,9 +209,14 @@ export class ChallengeManager {
     if (!this.currentExercise) return false;
     const ex = this.currentExercise;
 
+    // Track attempt count and last active time
+    if (!this.progress.attempts) this.progress.attempts = {};
+    this.progress.attempts[ex.id] = (this.progress.attempts[ex.id] ?? 0) + 1;
+    this.progress.lastRunAt = Date.now();
+
     const runner = new PythonRunner({
       onOutput: () => {}, onError: () => {}, onComplete: () => {}, onInputRequest: () => Promise.resolve(''),
-      turtleCanvas: null
+      turtleTarget: null
     });
 
     this.testResults.innerHTML = '<div class="ch-test-header">Running tests…</div>';
@@ -288,7 +293,8 @@ export class ChallengeManager {
   async _markComplete(ex) {
     const alreadyDone = this.progress.completed?.[ex.id];
     if (!this.progress.completed) this.progress.completed = {};
-    this.progress.completed[ex.id] = { completedAt: Date.now() };
+    if (!alreadyDone) this.progress.completed[ex.id] = { completedAt: Date.now() };
+    this.progress.lastRunAt = Date.now();
 
     if (!alreadyDone) {
       this.progress.totalXP = (this.progress.totalXP ?? 0) + ex.xp;
@@ -377,6 +383,11 @@ export class ChallengeManager {
     }
     const hint = hints[this._hintIndex % hints.length];
     this._hintIndex++;
+
+    // Track hint usage
+    if (!this.progress.hintsUsed) this.progress.hintsUsed = {};
+    this.progress.hintsUsed[this.currentExercise.id] =
+      (this.progress.hintsUsed[this.currentExercise.id] ?? 0) + 1;
 
     // Show hint in panel body
     let hintEl = this.panelBody.querySelector('.ch-hint');
