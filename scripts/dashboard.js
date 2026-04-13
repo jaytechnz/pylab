@@ -79,7 +79,7 @@ function _render(container, selectedClass) {
         <button class="btn-ghost btn-sm dash-export-btn" id="btn-export-csv">Export CSV</button>
       </div>
     </div>
-    <div class="dashboard-grid" id="dash-inner"></div>
+    <div class="dash-cards-grid" id="dash-inner"></div>
   `;
 
   container.querySelectorAll('.dash-filter-btn').forEach(btn => {
