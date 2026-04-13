@@ -121,13 +121,20 @@ function _render(container, selectedClass) {
   grid.innerHTML = `
     ${_buildOverviewCard(analytics, students)}
     ${_buildTrafficLightCard(students)}
+    ${_buildAccuracyCard(students)}
     ${_buildCategoryProgressCard(students)}
+    ${_buildConceptMasteryCard(students)}
     ${_buildActivityChart(sessions)}
+    ${_buildEngagementCard(students, sessions)}
     ${_buildHeatmapCard(students)}
+    ${_buildExamReadinessCard(students)}
     ${_buildInterventionsCard(students)}
+    ${_buildResilienceCard(students)}
     ${_buildAtRiskCard(students)}
+    ${_buildCohortCard(students)}
     ${_buildStudentTable(students)}
     ${_buildHardestExercisesCard(students)}
+    ${_buildContentQualityCard(students)}
   `;
 
   // Sortable table
@@ -523,6 +530,12 @@ function _showStudentDrillDown(grid, student) {
   const done = Object.keys(prog.completed ?? {}).length;
   const xp   = prog.totalXP ?? 0;
   const hints = Object.values(prog.hintsUsed ?? {}).reduce((a, b) => a + b, 0);
+  const completedIds = Object.keys(prog.completed ?? {});
+  const attMap = prog.attempts ?? {};
+  const firstAttemptDone = completedIds.filter(id => (attMap[id] ?? 1) === 1).length;
+  const firstAttemptRate = done ? Math.round((firstAttemptDone / done) * 100) : null;
+  const abandonedCount = Object.keys(attMap).filter(id => !prog.completed?.[id]).length;
+  const hintFreeCount = completedIds.filter(id => !(prog.hintsUsed?.[id] > 0)).length;
 
   // Category breakdown bars
   const catBars = CATEGORIES.map(cat => {
@@ -581,7 +594,7 @@ function _showStudentDrillDown(grid, student) {
   const html = `<div class="student-drilldown-panel">
     <div class="drilldown-header">
       <strong>${escHtml(student.displayName ?? student.email)}</strong>
-      <span class="drilldown-stats">${done} completed · ${xp} XP · ${hints} hints used</span>
+      <span class="drilldown-stats">${done} completed · ${xp} XP · ${hints} hints used${firstAttemptRate !== null ? ` · ${firstAttemptRate}% first-try` : ''}${hintFreeCount ? ` · ${hintFreeCount} hint-free` : ''}${abandonedCount ? ` · ${abandonedCount} abandoned` : ''}</span>
       <button class="btn-ghost btn-sm drilldown-close-btn">✕ Close</button>
     </div>
     <div class="drilldown-body drilldown-body--cols">
@@ -716,6 +729,430 @@ function _buildHardestExercisesCard(students) {
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
+    </div>
+  </div>`;
+}
+
+// ── Accuracy & Achievement ────────────────────────────────────────────────────
+
+function _buildAccuracyCard(students) {
+  const ap = _allProgress ?? {};
+  let totalCompleted = 0, firstAttemptCompleted = 0, totalAttemptsOnCompleted = 0;
+
+  const studentStats = students.map(s => {
+    const prog     = ap[s.uid] ?? {};
+    const completed = prog.completed ?? {};
+    const attempts  = prog.attempts  ?? {};
+    let sTotal = 0, sFirst = 0, sAttempts = 0;
+    Object.keys(completed).forEach(exId => {
+      sTotal++;
+      const a = attempts[exId] ?? 1;
+      if (a === 1) sFirst++;
+      sAttempts += a;
+    });
+    totalCompleted          += sTotal;
+    firstAttemptCompleted   += sFirst;
+    totalAttemptsOnCompleted += sAttempts;
+    const firstRate = sTotal ? Math.round((sFirst / sTotal) * 100) : null;
+    const avgAtt    = sTotal ? (sAttempts / sTotal).toFixed(1) : null;
+    return { ...s, sTotal, sFirst, firstRate, avgAtt };
+  });
+
+  const classFirstRate = totalCompleted ? Math.round((firstAttemptCompleted / totalCompleted) * 100) : 0;
+  const classAvgAtt    = totalCompleted ? (totalAttemptsOnCompleted / totalCompleted).toFixed(1) : '—';
+
+  const ranked = studentStats
+    .filter(s => s.sTotal >= 5)
+    .sort((a, b) => (b.firstRate ?? 0) - (a.firstRate ?? 0));
+
+  const effRows = ranked.slice(0, 5).map((s, i) =>
+    `<tr>
+      <td>${i + 1}</td>
+      <td>${escHtml(s.displayName ?? s.email)}</td>
+      <td>${s.firstRate}%</td>
+      <td>${s.avgAtt}</td>
+      <td>${s.sTotal}</td>
+    </tr>`
+  ).join('');
+
+  return `<div class="dash-card">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Accuracy &amp; Achievement
+    </div>
+    <div class="dash-stat-row">
+      <div class="dash-stat"><div class="dash-stat-val">${classFirstRate}%</div><div class="dash-stat-label">First-Try Success</div></div>
+      <div class="dash-stat"><div class="dash-stat-val">${classAvgAtt}</div><div class="dash-stat-label">Avg Attempts/Exercise</div></div>
+    </div>
+    ${ranked.length ? `<div class="dash-table-wrap" style="margin-top:8px">
+      <table class="dash-table">
+        <thead><tr><th>#</th><th>Student</th><th>1st-Try Rate</th><th>Avg Attempts</th><th>Completed</th></tr></thead>
+        <tbody>${effRows}</tbody>
+      </table></div>` : '<p class="feedback-empty" style="margin-top:8px">Complete 5+ exercises to see accuracy rankings.</p>'}
+  </div>`;
+}
+
+// ── Concept Mastery Map ───────────────────────────────────────────────────────
+
+function _buildConceptMasteryCard(students) {
+  const ap = _allProgress ?? {};
+  if (!students.length) return '';
+
+  const rows = students.map(s => {
+    const prog = ap[s.uid] ?? {};
+    const cells = CATEGORIES.map(cat => {
+      const catExs  = EXERCISES.filter(e => e.category === cat.id);
+      const catDone = catExs.filter(e => prog.completed?.[e.id]).length;
+      const pct     = catExs.length ? catDone / catExs.length : 0;
+      let status;
+      if (pct === 0)       status = 'none';
+      else if (pct < 0.4)  status = 'low';
+      else if (pct < 0.75) status = 'partial';
+      else                 status = 'mastered';
+      const label = { none: 'Not started', low: 'Struggling', partial: 'Progressing', mastered: 'Mastered' }[status];
+      return `<td class="mastery-cell mastery-${status}" title="${escHtml(cat.label)}: ${catDone}/${catExs.length} (${Math.round(pct*100)}%) — ${label}"></td>`;
+    }).join('');
+    return `<tr><td class="mastery-name">${escHtml(s.displayName ?? s.email)}</td>${cells}</tr>`;
+  }).join('');
+
+  const catHeaders = CATEGORIES.map(c =>
+    `<th class="mastery-cat-header" title="${escHtml(c.label)}">${c.icon}</th>`
+  ).join('');
+
+  const legend = [['mastered','Mastered (≥75%)'],['partial','Progressing (40–74%)'],['low','Struggling (<40%)'],['none','Not started']].map(([cls, lbl]) =>
+    `<span class="mastery-legend-item"><span class="mastery-dot mastery-${cls}"></span>${lbl}</span>`
+  ).join('');
+
+  return `<div class="dash-card dash-card--wide">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Concept Mastery Map
+    </div>
+    <div class="mastery-legend">${legend}</div>
+    <div class="dash-table-wrap">
+      <table class="dash-table mastery-table">
+        <thead><tr><th>Student</th>${catHeaders}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── Engagement (last 7 days) ──────────────────────────────────────────────────
+
+function _buildEngagementCard(students, sessions) {
+  const now  = Date.now();
+  const DAY  = 86400000;
+  const WEEK = 7 * DAY;
+  const ap   = _allProgress ?? {};
+
+  const stats = students.map(s => {
+    const sSess = sessions.filter(sess => {
+      const ts = sess.timestamp?.toMillis?.() ?? sess.timestamp ?? 0;
+      return sess.uid === s.uid && (now - ts) < WEEK;
+    });
+    const runs = sSess.length;
+    const activeDays = new Set(sSess.map(sess => {
+      const ts = sess.timestamp?.toMillis?.() ?? sess.timestamp ?? 0;
+      return Math.floor((now - ts) / DAY);
+    })).size;
+    const lastRunMs  = (ap[s.uid] ?? {}).lastRunAt;
+    const daysInactive = lastRunMs ? Math.floor((now - lastRunMs) / DAY) : 999;
+    return { ...s, runs, activeDays, daysInactive };
+  });
+
+  const avgRuns = stats.length ? (stats.reduce((a, s) => a + s.runs, 0) / stats.length).toFixed(1) : 0;
+  const avgDays = stats.length ? (stats.reduce((a, s) => a + s.activeDays, 0) / stats.length).toFixed(1) : 0;
+  const activeNow = stats.filter(s => s.daysInactive <= 2).length;
+
+  const rows = [...stats].sort((a, b) => b.runs - a.runs).map(s => {
+    const dotCls   = s.daysInactive === 0 ? 'green' : s.daysInactive <= 3 ? 'amber' : 'red';
+    const lastStr  = s.daysInactive === 999 ? 'Never' : s.daysInactive === 0 ? 'Today' : s.daysInactive === 1 ? 'Yesterday' : `${s.daysInactive}d ago`;
+    return `<tr>
+      <td>${escHtml(s.displayName ?? s.email)}</td>
+      <td>${s.runs}</td>
+      <td>${s.activeDays}/7</td>
+      <td><span class="eng-dot eng-dot--${dotCls}"></span> ${lastStr}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="dash-card">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      Engagement — Last 7 Days
+    </div>
+    <div class="dash-stat-row">
+      <div class="dash-stat"><div class="dash-stat-val">${avgRuns}</div><div class="dash-stat-label">Avg Runs/Student</div></div>
+      <div class="dash-stat"><div class="dash-stat-val">${avgDays}</div><div class="dash-stat-label">Avg Active Days</div></div>
+      <div class="dash-stat"><div class="dash-stat-val">${activeNow}</div><div class="dash-stat-label">Active (≤2 days ago)</div></div>
+    </div>
+    <div class="dash-table-wrap" style="margin-top:8px">
+      <table class="dash-table">
+        <thead><tr><th>Student</th><th>Runs</th><th>Active Days</th><th>Last Active</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" style="color:var(--text-muted)">No session data.</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── Resilience & Attempt Patterns ─────────────────────────────────────────────
+
+function _buildResilienceCard(students) {
+  const ap = _allProgress ?? {};
+
+  const stats = students.map(s => {
+    const prog      = ap[s.uid] ?? {};
+    const completed = prog.completed ?? {};
+    const attempts  = prog.attempts  ?? {};
+    const triedIds  = Object.keys(attempts);
+    const abandoned = triedIds.filter(id => !completed[id]);
+    const abandonRate = triedIds.length ? Math.round((abandoned.length / triedIds.length) * 100) : null;
+    // Persisted: completed after 3+ attempts
+    const persistedCount = Object.keys(completed).filter(id => (attempts[id] ?? 1) >= 3).length;
+    return { ...s, tried: triedIds.length, abandoned: abandoned.length, abandonRate, persistedCount };
+  }).filter(s => s.tried > 0);
+
+  const classAvgAbandon = stats.length
+    ? Math.round(stats.reduce((a, s) => a + (s.abandonRate ?? 0), 0) / stats.length)
+    : 0;
+
+  const mostPersistent = [...stats].sort((a, b) => b.persistedCount - a.persistedCount).slice(0, 4);
+  const highAbandoners = [...stats]
+    .filter(s => (s.abandonRate ?? 0) > 50 && s.tried >= 3)
+    .sort((a, b) => (b.abandonRate ?? 0) - (a.abandonRate ?? 0));
+
+  const persistRows = mostPersistent.length
+    ? mostPersistent.map(s =>
+        `<div class="resilience-row">
+          <span class="resilience-name">${escHtml(s.displayName ?? s.email)}</span>
+          <span class="resilience-badge resilience-badge--good">Persisted on ${s.persistedCount} exercise${s.persistedCount !== 1 ? 's' : ''}</span>
+        </div>`).join('')
+    : '<p class="feedback-empty">No data yet.</p>';
+
+  const abandonRows = highAbandoners.length
+    ? highAbandoners.map(s =>
+        `<div class="resilience-row">
+          <span class="resilience-name">${escHtml(s.displayName ?? s.email)}</span>
+          <span class="resilience-badge resilience-badge--warn">${s.abandonRate}% abandoned (${s.abandoned}/${s.tried})</span>
+        </div>`).join('')
+    : '<p class="feedback-empty">No high-abandonment students.</p>';
+
+  return `<div class="dash-card">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Resilience &amp; Attempt Patterns
+    </div>
+    <div class="dash-stat-row">
+      <div class="dash-stat"><div class="dash-stat-val">${classAvgAbandon}%</div><div class="dash-stat-label">Avg Abandonment Rate</div></div>
+    </div>
+    <div class="resilience-cols">
+      <div>
+        <div class="resilience-section-label">Most Persistent</div>
+        ${persistRows}
+      </div>
+      <div>
+        <div class="resilience-section-label">High Abandonment (needs support)</div>
+        ${abandonRows}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Cohort Comparison ─────────────────────────────────────────────────────────
+
+function _buildCohortCard(students) {
+  const ap = _allProgress ?? {};
+  if (students.length < 2) return '';
+
+  const withStats = students.map(s => {
+    const prog  = ap[s.uid] ?? {};
+    const done  = Object.keys(prog.completed ?? {}).length;
+    const xp    = prog.totalXP ?? 0;
+    const hints = Object.values(prog.hintsUsed ?? {}).reduce((a, b) => a + b, 0);
+    return { ...s, done, xp, hints };
+  }).sort((a, b) => b.done - a.done);
+
+  const n = withStats.length;
+  const rows = withStats.map((s, rank) => {
+    const percentile = n > 1 ? Math.round(((n - 1 - rank) / (n - 1)) * 100) : 100;
+    const pct = Math.round((s.done / TOTAL_EXERCISES) * 100);
+    const barCol = percentile >= 75 ? 'var(--accent)' : percentile >= 40 ? 'var(--warning)' : 'var(--error)';
+    return `<tr>
+      <td>${rank + 1}</td>
+      <td>${escHtml(s.displayName ?? s.email)}</td>
+      <td>
+        <div class="td-progress-wrap">
+          <div class="td-progress-bar" style="width:${percentile}%;background:${barCol}"></div>
+          <span class="td-progress-label">${percentile}th</span>
+        </div>
+      </td>
+      <td>${pct}%</td>
+      <td>${s.xp}</td>
+      <td>${s.hints}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="dash-card dash-card--wide">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Cohort Comparison &amp; Rankings
+    </div>
+    <div class="dash-table-wrap">
+      <table class="dash-table">
+        <thead><tr><th>Rank</th><th>Student</th><th>Percentile</th><th>Completion</th><th>XP</th><th>Hints</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="dash-sub-note">Ranked by exercises completed within this class/filter.</p>
+  </div>`;
+}
+
+// ── Exam Readiness ────────────────────────────────────────────────────────────
+
+function _buildExamReadinessCard(students) {
+  const ap = _allProgress ?? {};
+  const hardExs = EXERCISES.filter(e => e.difficulty === 'hard');
+
+  const stats = students.map(s => {
+    const prog       = ap[s.uid] ?? {};
+    const completed  = prog.completed  ?? {};
+    const hints      = prog.hintsUsed  ?? {};
+    const completedIds = Object.keys(completed);
+
+    const hintFree     = completedIds.filter(id => !(hints[id] > 0)).length;
+    const hintFreeRate = completedIds.length ? Math.round((hintFree / completedIds.length) * 100) : null;
+
+    const hardDone = hardExs.filter(e => completed[e.id]).length;
+    const hardRate = hardExs.length ? Math.round((hardDone / hardExs.length) * 100) : 0;
+
+    const weakTopics = CATEGORIES.filter(cat => {
+      const catExs = EXERCISES.filter(e => e.category === cat.id);
+      const catDone = catExs.filter(e => completed[e.id]).length;
+      return catExs.length > 0 && catDone / catExs.length < 0.5;
+    }).map(c => c.label);
+
+    const completionPct = TOTAL_EXERCISES ? completedIds.length / TOTAL_EXERCISES : 0;
+    const readiness = Math.round(
+      (completionPct * 0.5 + (hardRate / 100) * 0.3 + ((hintFreeRate ?? 0) / 100) * 0.2) * 100
+    );
+    return { ...s, hintFreeRate, hardDone, hardRate, weakTopics, readiness };
+  });
+
+  const classReadiness = stats.length
+    ? Math.round(stats.reduce((a, s) => a + s.readiness, 0) / stats.length)
+    : 0;
+
+  const rows = [...stats].sort((a, b) => b.readiness - a.readiness).map(s => {
+    const rCol = s.readiness >= 70 ? 'var(--accent)' : s.readiness >= 40 ? 'var(--warning)' : 'var(--error)';
+    return `<tr>
+      <td>${escHtml(s.displayName ?? s.email)}</td>
+      <td>
+        <div class="td-progress-wrap">
+          <div class="td-progress-bar" style="width:${s.readiness}%;background:${rCol}"></div>
+          <span class="td-progress-label">${s.readiness}%</span>
+        </div>
+      </td>
+      <td>${s.hintFreeRate !== null ? s.hintFreeRate + '%' : '—'}</td>
+      <td>${s.hardDone}/${hardExs.length}</td>
+      <td class="exam-weak-topics">${s.weakTopics.length ? escHtml(s.weakTopics.join(', ')) : '<span style="color:var(--accent)">None</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="dash-card dash-card--wide">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Assessment &amp; Exam Readiness
+    </div>
+    <div class="dash-stat-row">
+      <div class="dash-stat"><div class="dash-stat-val">${classReadiness}%</div><div class="dash-stat-label">Class Readiness Score</div></div>
+      <div class="dash-stat"><div class="dash-stat-val">${hardExs.length}</div><div class="dash-stat-label">Hard Exercises Total</div></div>
+    </div>
+    <div class="dash-table-wrap" style="margin-top:8px">
+      <table class="dash-table">
+        <thead><tr><th>Student</th><th>Readiness</th><th>Hint-Free %</th><th>Hard Exs</th><th>Weak Topics</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="5" style="color:var(--text-muted)">No data yet.</td></tr>'}</tbody>
+      </table>
+    </div>
+    <p class="dash-sub-note">Readiness = 50% completion + 30% hard exercises + 20% hint-free rate</p>
+  </div>`;
+}
+
+// ── Content Quality & Difficulty Analysis ─────────────────────────────────────
+
+function _buildContentQualityCard(students) {
+  const ap = _allProgress ?? {};
+  const n  = students.length || 1;
+
+  const topicRows = CATEGORIES.map(cat => {
+    const catExs = EXERCISES.filter(e => e.category === cat.id);
+    let totalAttempts = 0, totalTried = 0, totalCompleted = 0;
+    catExs.forEach(ex => {
+      students.forEach(s => {
+        const prog = ap[s.uid] ?? {};
+        const a = prog.attempts?.[ex.id] ?? 0;
+        if (a > 0) { totalAttempts += a; totalTried++; }
+        if (prog.completed?.[ex.id]) totalCompleted++;
+      });
+    });
+    const completionRate = Math.round((totalCompleted / (catExs.length * n)) * 100);
+    const avgAttempts    = totalTried ? (totalAttempts / totalTried).toFixed(1) : '—';
+    const diffIndex      = completionRate < 40 ? 'hard' : completionRate < 70 ? 'medium' : 'easy';
+    return `<tr>
+      <td>${cat.icon} ${escHtml(cat.label)}</td>
+      <td>${completionRate}%</td>
+      <td>${avgAttempts}</td>
+      <td><span class="diff-badge diff-${diffIndex}">${diffIndex[0].toUpperCase()}</span></td>
+    </tr>`;
+  }).join('');
+
+  const failureStats = EXERCISES.map(ex => {
+    let tried = 0, completed = 0, totalAttempts = 0;
+    students.forEach(s => {
+      const prog = ap[s.uid] ?? {};
+      const a = prog.attempts?.[ex.id] ?? 0;
+      if (a > 0) { tried++; totalAttempts += a; }
+      if (prog.completed?.[ex.id]) completed++;
+    });
+    const failRate = tried > 0 ? Math.round(((tried - completed) / tried) * 100) : 0;
+    const avgAtt   = tried ? (totalAttempts / tried).toFixed(1) : '—';
+    return { ex, tried, completed, failRate, avgAtt };
+  }).filter(s => s.tried > 0).sort((a, b) => b.failRate - a.failRate).slice(0, 6);
+
+  const failRows = failureStats.length
+    ? failureStats.map(s =>
+        `<tr>
+          <td>${escHtml(s.ex.title)}</td>
+          <td><span class="diff-badge diff-${s.ex.difficulty}">${s.ex.difficulty[0].toUpperCase()}</span></td>
+          <td>${s.tried}</td>
+          <td>${s.failRate}%</td>
+          <td>${s.avgAtt}</td>
+        </tr>`).join('')
+    : '<tr><td colspan="5" style="color:var(--text-muted)">No attempt data yet.</td></tr>';
+
+  return `<div class="dash-card dash-card--wide">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Content Quality &amp; Difficulty Analysis
+    </div>
+    <div class="content-quality-cols">
+      <div>
+        <div class="resilience-section-label">Topic Difficulty Index</div>
+        <div class="dash-table-wrap">
+          <table class="dash-table">
+            <thead><tr><th>Topic</th><th>Completion</th><th>Avg Attempts</th><th>Index</th></tr></thead>
+            <tbody>${topicRows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="resilience-section-label">Highest-Failure Exercises</div>
+        <div class="dash-table-wrap">
+          <table class="dash-table">
+            <thead><tr><th>Exercise</th><th>Diff</th><th>Tried</th><th>Fail Rate</th><th>Avg Att.</th></tr></thead>
+            <tbody>${failRows}</tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>`;
 }
