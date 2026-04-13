@@ -1037,7 +1037,14 @@ details[open] .ref-section-title::before { transform: rotate(90deg); }
   z-index: 200;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden;  /* children scroll themselves; do not scroll the overlay */
+}
+/* The content area inside the overlay (everything below the header) must scroll */
+.overlay-panel > *:not(.overlay-header) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .overlay-header {
