@@ -3,6 +3,7 @@
 // Timestamps are computed at call time so activity charts always look current.
 
 import { EXERCISES } from './exercises.js';
+import { SOLUTIONS } from './solutions.js';
 
 export function generateDemoData() {
   const now = Date.now();
@@ -52,14 +53,18 @@ export function generateDemoData() {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {} } = {}) {
-  const completed = {};
+  const completed  = {};
+  const submissions = {};
   let totalXP = 0;
   const now = Date.now();
 
-  // Space completions evenly over the last 30 days
+  // Space completions evenly over the last 30 days; attach model solution as saved code
   EXERCISES.slice(0, count).forEach((ex, i) => {
     completed[ex.id] = { completedAt: now - (count - i) * 4 * 3600000 };
     totalXP += ex.xp;
+    if (SOLUTIONS[ex.id]) {
+      submissions[ex.id] = { code: SOLUTIONS[ex.id], savedAt: now - (count - i) * 4 * 3600000 };
+    }
   });
 
   const badges = [];
@@ -71,7 +76,7 @@ function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {} } = {})
   if (totalXP >= 500)  badges.push('xp_500');
   if (totalXP >= 1000) badges.push('xp_1000');
 
-  return { completed, totalXP, badges, attempts, hintsUsed, lastRunAt };
+  return { completed, submissions, totalXP, badges, attempts, hintsUsed, lastRunAt };
 }
 
 function _makeSessions(students, now, DAY) {
