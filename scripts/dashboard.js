@@ -373,7 +373,7 @@ function _buildInterventionsCard(students) {
   if (stuckStudents.length) {
     suggestions.push({
       icon: '🔁',
-      text: `${stuckStudents.length} student${stuckStudents.length > 1 ? 's' : ''} attempted an exercise 5+ times without completing: ${stuckStudents.slice(0, 3).map(escHtml).join(', ')}${stuckStudents.length > 3 ? '…' : ''}.`
+      text: `${stuckStudents.length} student${stuckStudents.length > 1 ? 's' : ''} attempted an exercise 5+ times without completing: ${stuckStudents.map(escHtml).join(', ')}.`
     });
   }
 
@@ -386,7 +386,7 @@ function _buildInterventionsCard(students) {
   if (inactiveStudents.length) {
     suggestions.push({
       icon: '😴',
-      text: `${inactiveStudents.length} student${inactiveStudents.length > 1 ? 's' : ''} ha${inactiveStudents.length > 1 ? 've' : 's'} not been active in 7+ days: ${inactiveStudents.slice(0, 3).map(s => escHtml(s.displayName ?? s.email)).join(', ')}${inactiveStudents.length > 3 ? '…' : ''}.`
+      text: `${inactiveStudents.length} student${inactiveStudents.length > 1 ? 's' : ''} ha${inactiveStudents.length > 1 ? 've' : 's'} not been active in 7+ days: ${inactiveStudents.map(s => escHtml(s.displayName ?? s.email)).join(', ')}.`
     });
   }
 
@@ -401,7 +401,7 @@ function _buildInterventionsCard(students) {
   if (highHintStudents.length) {
     suggestions.push({
       icon: '💡',
-      text: `${highHintStudents.length} student${highHintStudents.length > 1 ? 's' : ''} ${highHintStudents.length > 1 ? 'are' : 'is'} using many hints with low completion — may need 1:1 support: ${highHintStudents.slice(0, 3).map(escHtml).join(', ')}.`
+      text: `${highHintStudents.length} student${highHintStudents.length > 1 ? 's' : ''} ${highHintStudents.length > 1 ? 'are' : 'is'} using many hints with low completion — may need 1:1 support: ${highHintStudents.map(escHtml).join(', ')}.`
     });
   }
 
