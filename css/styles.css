@@ -315,16 +315,35 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 .btn-ghost {
   padding: 0.4rem 0.75rem;
   background: transparent;
-  color: var(--sidebar-text);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.8rem;
   cursor: pointer;
   transition: background var(--transition), color var(--transition);
 }
-.btn-ghost:hover { background: var(--bg-surface); color: var(--text-primary); }
+.btn-ghost:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
 
-.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+/* btn-ghost buttons sitting on the dark green header or overlay header
+   need white text to remain visible in light mode */
+.app-header .btn-ghost,
+.overlay-header .btn-ghost {
+  color: var(--sidebar-text);
+  border-color: rgba(255,255,255,0.25);
+}
+.app-header .btn-ghost:hover,
+.overlay-header .btn-ghost:hover {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+.btn-sm { 
+  padding: 0.3rem 0.6rem; 
+  font-size: 0.78rem; 
+}
 
 .btn-accent {
   padding: 0.3rem 0.6rem;
