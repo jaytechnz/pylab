@@ -107,6 +107,17 @@ function _render(container, selectedClass) {
   );
 
   const grid = container.querySelector('#dash-inner');
+
+  // Empty state when no live students exist
+  if (!students.length) {
+    grid.innerHTML = `<div class="dash-empty-state">
+      <div class="dash-empty-icon">👥</div>
+      <div class="dash-empty-title">${_isDemoMode ? 'No students match this filter.' : 'No students yet.'}</div>
+      <div class="dash-empty-body">${_isDemoMode ? '' : 'Use the <strong>Admin panel</strong> to add teachers and students, then their data will appear here.<br><br>Click <strong>Try Demo</strong> above to preview the dashboard with sample data.'}</div>
+    </div>`;
+    return;
+  }
+
   grid.innerHTML = `
     ${_buildOverviewCard(analytics, students)}
     ${_buildTrafficLightCard(students)}
@@ -282,21 +293,6 @@ function _buildActivityChart(sessions) {
 function _buildHeatmapCard(students) {
   const ap = _allProgress ?? {};
   const n  = students.length || 1;
-
-  const cells = EXERCISES.map(ex => {
-    const completedCount = students.filter(s => (ap[s.uid] ?? {}).completed?.[ex.id]).length;
-    const pct = completedCount / n;
-    // 0 = grey, low = red, mid = amber, high = green
-    let bg;
-    if (completedCount === 0) bg = 'var(--border)';
-    else if (pct < 0.25) bg = '#ef4444';
-    else if (pct < 0.5)  bg = '#f97316';
-    else if (pct < 0.75) bg = '#eab308';
-    else                 bg = 'var(--accent)';
-
-    return `<div class="heatmap-cell" style="background:${bg}"
-                 title="${escHtml(ex.title)}: ${completedCount}/${students.length} completed"></div>`;
-  }).join('');
 
   const legend = ['0%','1–24%','25–49%','50–74%','75–100%'].map((l, i) => {
     const colours = ['var(--border)','#ef4444','#f97316','#eab308','var(--accent)'];
