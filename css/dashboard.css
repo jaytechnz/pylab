@@ -88,6 +88,37 @@
 }
 .dash-export-btn { font-size: 0.75rem; }
 
+/* ── Demo toggle ── */
+.dash-toolbar-right { display: flex; align-items: center; gap: 0.5rem; }
+
+.dash-demo-btn {
+  padding: 0.3rem 0.85rem;
+  border: 1px dashed var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.dash-demo-btn:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.dash-demo-active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-style: solid;
+}
+
+.dash-demo-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  letter-spacing: 0.05em;
+}
+
 /* ── Stat row ── */
 .dash-stat-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 .dash-stat { flex: 1; min-width: 70px; text-align: center; }
