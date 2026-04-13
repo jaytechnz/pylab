@@ -2,6 +2,18 @@
    dashboard.css — Teacher analytics dashboard
    ============================================================ */
 
+/* The outer #dashboard-grid div already has this class applied in the HTML,
+   but it must be a flex column (toolbar on top, scrollable cards below).
+   Override to flex here; #dash-inner gets the actual card grid. */
+#dashboard-grid {
+  display: flex !important;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden !important;
+  flex: 1;
+}
+
+/* Inner card grid — applied to #dash-inner */
 .dashboard-grid {
   flex: 1;
   overflow-y: auto;
@@ -51,6 +63,20 @@
 
 .dash-loading { text-align: center; color: var(--text-muted); padding: 3rem; font-style: italic; }
 .dash-error   { color: var(--error); padding: 1rem; }
+
+.dash-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.dash-empty-icon  { font-size: 3rem; line-height: 1; }
+.dash-empty-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+.dash-empty-body  { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; max-width: 400px; }
 
 /* ── Toolbar (filter + export) ── */
 .dash-toolbar {
@@ -102,9 +128,9 @@
   cursor: pointer;
   transition: all var(--transition);
 }
-.dash-demo-btn:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.dash-demo-btn:hover { background: rgba(34, 197, 94, 0.1); }
 .dash-demo-active {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: rgba(34, 197, 94, 0.15);
   border-style: solid;
 }
 
@@ -318,7 +344,7 @@
 .drilldown-header {
   display: flex; align-items: center; gap: 0.75rem;
   padding: 0.65rem 1rem;
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+  background: rgba(34, 197, 94, 0.08);
   border-bottom: 1px solid var(--border);
   font-size: 0.82rem;
 }
