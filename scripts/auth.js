@@ -57,8 +57,11 @@ export async function signIn(email, password) {
   const cred = await signInWithEmailAndPassword(auth, email, password);
   const role  = roleForEmail(email);
   await setDoc(doc(db, 'users', cred.user.uid), {
-    lastLoginAt: serverTimestamp(),
-    role
+    uid:         cred.user.uid,
+    email:       email.toLowerCase(),
+    displayName: cred.user.displayName || email.split('@')[0],
+    role,
+    lastLoginAt: serverTimestamp()
   }, { merge: true });
   return { user: cred.user, role };
 }
