@@ -264,7 +264,15 @@
   font-size: 0.8rem;
 }
 .intervention-icon { font-size: 1.1rem; flex-shrink: 0; line-height: 1.4; }
-.intervention-text { color: var(--text-secondary); line-height: 1.5; }
+.intervention-text {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
+  flex: 1;
+}
 .intervention-text strong { color: var(--text-primary); }
 
 /* ── At-risk ── */
