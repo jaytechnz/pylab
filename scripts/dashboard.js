@@ -816,7 +816,7 @@ function _buildConceptMasteryCard(students) {
   }).join('');
 
   const catHeaders = CATEGORIES.map(c =>
-    `<th class="mastery-cat-header" title="${escHtml(c.label)}">${c.icon}</th>`
+    `<th class="mastery-cat-header"><span class="mastery-tip-wrap" data-tip="${escHtml(c.label)}">${c.icon}</span></th>`
   ).join('');
 
   const legend = [['mastered','Mastered (≥75%)'],['partial','Progressing (40–74%)'],['low','Struggling (<40%)'],['none','Not started']].map(([cls, lbl]) =>
