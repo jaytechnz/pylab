@@ -214,12 +214,31 @@ export class ChallengeManager {
     this.progress.attempts[ex.id] = (this.progress.attempts[ex.id] ?? 0) + 1;
     this.progress.lastRunAt = Date.now();
 
+    this.testResults.innerHTML = '<div class="ch-test-header">Running tests…</div>';
+
+    // ── Input type convention check ───────────────────────────────────────────
+    if (ex.inputType) {
+      const needsInt   = ex.inputType === 'int'   || ex.inputType === 'int_float';
+      const needsFloat = ex.inputType === 'float' || ex.inputType === 'int_float';
+      const hasInt     = /\bint\s*\(\s*input\s*\(/.test(source);
+      const hasFloat   = /\bfloat\s*\(\s*input\s*\(/.test(source);
+
+      const missing = [];
+      if (needsInt   && !hasInt)   missing.push('int(input(...))');
+      if (needsFloat && !hasFloat) missing.push('float(input(...))');
+
+      if (missing.length) {
+        const msg = `Input values must be converted to numbers. Use ${missing.join(' and ')} when reading numeric input.`;
+        this._renderTestResults([{ pass: false, message: msg }], false);
+        return false;
+      }
+    }
+
     const runner = new PythonRunner({
       onOutput: () => {}, onError: () => {}, onComplete: () => {}, onInputRequest: () => Promise.resolve(''),
       turtleTarget: null
     });
 
-    this.testResults.innerHTML = '<div class="ch-test-header">Running tests…</div>';
     const results = [];
 
     for (const tc of ex.tests) {
@@ -267,13 +286,20 @@ export class ChallengeManager {
     results.forEach((r, i) => {
       const icon = r.pass ? '✓' : '✗';
       const cls  = r.pass ? 'test-pass' : 'test-fail';
-      html += `<div class="test-case ${cls}">
-        <span class="test-icon">${icon}</span>
-        <div class="test-detail">
-          <code>Expected: ${escHtml(r.expected.slice(0,3).join(' | '))}</code>
-          ${!r.pass ? `<code>Got:      ${escHtml(r.got.slice(0,3).join(' | '))}</code>` : ''}
-        </div>
-      </div>`;
+      if (r.message) {
+        html += `<div class="test-case ${cls}">
+          <span class="test-icon">${icon}</span>
+          <div class="test-detail"><code>${escHtml(r.message)}</code></div>
+        </div>`;
+      } else {
+        html += `<div class="test-case ${cls}">
+          <span class="test-icon">${icon}</span>
+          <div class="test-detail">
+            <code>Expected: ${escHtml(r.expected.slice(0,3).join(' | '))}</code>
+            ${!r.pass ? `<code>Got:      ${escHtml(r.got.slice(0,3).join(' | '))}</code>` : ''}
+          </div>
+        </div>`;
+      }
     });
 
     if (allPass) {
