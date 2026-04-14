@@ -6,6 +6,7 @@ import { PythonRunner, detectConstructs, pep8Lint } from './runner.js';
 import { renderDashboard }               from './dashboard.js';
 import { ChallengeManager }              from './challenges.js';
 import { renderAdmin, initAdmin }        from './admin.js';
+import { initSuggestions, teardownSuggestions, setupSuggestionsUI } from './suggestions.js';
 import {
   saveNewProgram, updateProgram, loadProgram,
   listPrograms, deleteProgram, renameProgram, saveSession
@@ -191,7 +192,7 @@ onAuth(async (user, profile) => {
   currentUser    = user;
   currentProfile = profile;
 
-  if (!user) { show(loginPage); hide(appEl); return; }
+  if (!user) { teardownSuggestions(); show(loginPage); hide(appEl); return; }
 
   hide(loginPage);
   show(appEl);
@@ -216,6 +217,7 @@ onAuth(async (user, profile) => {
   if (isStudent) updateClassDisplay(profile?.classCode);
 
   initAdmin(user, profile);
+  initSuggestions(user, profile);
 
   await refreshProgramList();
   newProgram();
@@ -276,6 +278,8 @@ signOutBtn?.addEventListener('click', async () => {
   challenges.reset();
   await signOutUser();
 });
+
+setupSuggestionsUI();
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PROGRAM MANAGEMENT
