@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/editor.css">
   <link rel="stylesheet" href="css/challenges.css">
   <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/suggestions.css">
 </head>
 <body>
 
@@ -176,11 +177,25 @@
           <span id="tab-dirty" class="tab-dirty hidden">●</span>
         </div>
         <div class="tabbar-actions">
+          <span id="save-status" class="save-status"></span>
+          <div class="sg-wrap" id="sg-wrap">
+            <button id="btn-suggestions" class="btn-ghost btn-sm sg-toggle-btn" title="Suggestions &amp; feedback">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Suggestions
+              <span id="sg-badge" class="sg-badge hidden">0</span>
+            </button>
+            <div id="sg-dropdown" class="sg-dropdown hidden">
+              <button class="sg-dropdown-item" id="btn-sg-request">✨ Feature Request</button>
+              <button class="sg-dropdown-item" id="btn-sg-error">🐛 Report an Error</button>
+              <button class="sg-dropdown-item" id="btn-sg-mine">📨 My Submissions</button>
+              <div class="sg-dropdown-sep hidden" id="sg-admin-sep"></div>
+              <button class="sg-dropdown-item sg-admin-item hidden" id="btn-sg-inbox">📥 All Submissions</button>
+            </div>
+          </div>
           <button id="btn-save" class="btn-ghost btn-sm" title="Save (Ctrl+S)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             Save
           </button>
-          <span id="save-status" class="save-status"></span>
         </div>
       </div>
 
@@ -620,6 +635,72 @@ for i in range(4):
 <!-- Skulpt Python runtime -->
 <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+<!-- ── Suggestions modals ── -->
+
+<!-- Feature Request -->
+<div id="sg-modal-request" class="sg-modal hidden">
+  <div class="sg-card sg-card--form">
+    <div class="sg-card-header">
+      <span class="sg-card-title">✨ Feature Request</span>
+      <button class="sg-close-btn" id="sg-req-cancel">✕</button>
+    </div>
+    <div class="sg-card-body">
+      <label class="sg-label" for="sg-req-text">Describe your idea or request</label>
+      <textarea id="sg-req-text" class="sg-textarea" rows="5" placeholder="I would like to see…"></textarea>
+    </div>
+    <div class="sg-card-footer">
+      <span id="sg-req-status" class="sg-status hidden"></span>
+      <button class="btn-ghost btn-sm" id="sg-req-cancel-2">Cancel</button>
+      <button class="btn-accent btn-sm" id="sg-req-submit">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Error Report -->
+<div id="sg-modal-error" class="sg-modal hidden">
+  <div class="sg-card sg-card--form">
+    <div class="sg-card-header">
+      <span class="sg-card-title">🐛 Report an Error</span>
+      <button class="sg-close-btn" id="sg-err-cancel">✕</button>
+    </div>
+    <div class="sg-card-body">
+      <div>
+        <label class="sg-label" for="sg-exercise-sel">Exercise (optional)</label>
+        <select id="sg-exercise-sel" class="sg-select"></select>
+      </div>
+      <div>
+        <label class="sg-label" for="sg-err-text">Describe the error</label>
+        <textarea id="sg-err-text" class="sg-textarea" rows="5" placeholder="When I run… the output was… but I expected…"></textarea>
+      </div>
+    </div>
+    <div class="sg-card-footer">
+      <span id="sg-err-status" class="sg-status hidden"></span>
+      <button class="btn-ghost btn-sm" id="sg-err-cancel-2">Cancel</button>
+      <button class="btn-accent btn-sm" id="sg-err-submit">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inbox (admin) / My Submissions (regular user) -->
+<div id="sg-modal-inbox" class="sg-modal hidden">
+  <div class="sg-card sg-card--inbox">
+    <div class="sg-card-header">
+      <span class="sg-card-title" id="sg-inbox-title">Submissions</span>
+      <button class="sg-close-btn" id="sg-inbox-close">✕</button>
+    </div>
+    <div class="sg-filters hidden" id="sg-filters">
+      <button class="sg-filter-btn active" data-f="all">All</button>
+      <button class="sg-filter-btn" data-f="new">New</button>
+      <button class="sg-filter-btn" data-f="request">Requests</button>
+      <button class="sg-filter-btn" data-f="error">Errors</button>
+      <button class="sg-filter-btn" data-f="replied">Replied</button>
+    </div>
+    <div class="sg-inbox-body" id="sg-inbox-list">
+      <div class="sg-loading">Loading…</div>
+    </div>
+  </div>
+</div>
 
 <!-- App modules -->
 <script type="module" src="scripts/app.js"></script>
