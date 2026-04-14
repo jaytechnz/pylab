@@ -1,0 +1,400 @@
+/* ============================================================
+   suggestions.css — Suggestions dropdown, modals, inbox
+   ============================================================ */
+
+/* ── Dropdown wrap ── */
+.sg-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sg-toggle-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sg-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--error);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.sg-dropdown {
+  position: fixed;
+  min-width: 190px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  z-index: 2000;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sg-dropdown-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+.sg-dropdown-item:hover { background: var(--accent-glow); color: var(--accent); }
+
+.sg-dropdown-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.sg-dropdown-item.sg-admin-item {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Shared modal overlay ── */
+.sg-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.sg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.sg-card--form { width: 480px; }
+
+.sg-card--inbox {
+  width: min(760px, 100%);
+}
+
+.sg-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sg-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sg-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.sg-close-btn:hover { background: var(--accent-glow); color: var(--accent); }
+
+.sg-card-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Form fields ── */
+.sg-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+}
+
+.sg-textarea {
+  width: 100%;
+  min-height: 100px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.sg-textarea:focus { outline: none; border-color: var(--accent); }
+
+.sg-select {
+  width: 100%;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+}
+.sg-select:focus { outline: none; border-color: var(--accent); }
+
+.sg-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sg-status {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0;
+}
+.sg-status--ok  { color: var(--success); }
+.sg-status--err { color: var(--error); }
+
+/* ── Inbox filters ── */
+.sg-filters {
+  display: flex;
+  gap: 4px;
+  padding: 10px 18px 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.sg-filter-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.sg-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sg-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+/* ── Inbox list ── */
+.sg-inbox-body {
+  padding: 10px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sg-loading, .sg-empty {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ── Individual submission card ── */
+.sg-item {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: border-color 0.15s;
+}
+
+.sg-item--new     { 
+  border-left: 3px solid var(--accent); 
+}
+
+.sg-item--replied { 
+  border-left: 3px solid var(--success); 
+}
+
+.sg-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sg-type-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.sg-type-request { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.sg-type-error   { background: rgba(239,68,68,0.15);  color: var(--error); }
+
+.sg-stat-chip {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sg-stat-new     { background: rgba(234,179,8,0.15);  color: #ca8a04; }
+.sg-stat-read    { background: var(--accent-glow);     color: var(--text-muted); }
+.sg-stat-replied { background: rgba(34,197,94,0.15);  color: var(--success); }
+
+.sg-ts {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.sg-item-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+}
+.sg-item-user strong { color: var(--text-primary); }
+
+.sg-mailto {
+  color: var(--accent);
+  font-size: 11px;
+  text-decoration: none;
+}
+.sg-mailto:hover { text-decoration: underline; }
+
+.sg-role-chip {
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--accent-glow);
+  color: var(--text-muted);
+}
+.sg-role-teacher    { color: var(--accent); }
+.sg-role-superadmin { background: rgba(234,179,8,0.15); color: #ca8a04; }
+
+.sg-challenge-ref {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--accent-glow);
+  border-radius: 4px;
+  padding: 3px 8px;
+  align-self: flex-start;
+}
+
+.sg-item-msg {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Reply view (shown to submitter) ── */
+.sg-reply-view {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: 5px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sg-reply-from {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--success);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sg-reply-text {
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.sg-reply-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  align-self: flex-end;
+}
+
+/* ── Admin reply controls ── */
+.sg-admin-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.sg-reply-ta {
+  width: 100%;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 6px 8px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.sg-reply-ta:focus { outline: none; border-color: var(--accent); }
+
+.sg-admin-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
