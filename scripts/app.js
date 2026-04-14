@@ -41,6 +41,7 @@ const editorTextarea    = $('code-editor');
 const editorHighlight   = $('editor-highlight');
 const editorGutter      = $('editor-gutter');
 const programTitleEl    = $('program-title-display');
+const editorTabEl       = $('active-tab');
 const tabFilename       = $('tab-filename');
 const tabDirty          = $('tab-dirty');
 
@@ -643,6 +644,8 @@ function setSidebarView(view) {
   sidebarChalView?.classList.toggle('hidden', !isCh);
   newProgramBtn?.classList.toggle('hidden', isCh);
   if (programTitleEl) programTitleEl.classList.toggle('hidden', isCh);
+  editorTabEl?.classList.toggle('hidden', isCh);
+  saveBtn?.classList.toggle('hidden', isCh);
   localStorage.setItem('pylab_sidebarView', view);
 }
 
