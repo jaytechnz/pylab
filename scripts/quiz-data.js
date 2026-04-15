@@ -77,7 +77,7 @@ export const QUIZ_QUESTIONS = [
     ['int']),
 
   fill('var-fi-05','variables','medium',
-    'Complete the f-string to print the variable name:\n\nname = "Sam"\nprint(f"Hello, {___}!")',
+    'Complete the code to print a greeting using concatenation:\n\nname = "Sam"\nprint("Hello, " + ___ + "!")',
     ['name']),
 
   fill('var-fi-06','variables','medium',
@@ -560,7 +560,7 @@ export const QUIZ_QUESTIONS = [
     { items: [
       'for i in range(1, 6):',
       '    result = 3 * i',
-      '    print(f"3 x {i} = {result}")',
+      '    print("3 x " + str(i) + " = " + str(result))',
     ]}),
 
   drag('itr-dr-06','iteration','hard','order',
@@ -787,7 +787,7 @@ export const QUIZ_QUESTIONS = [
     ['** 2', '**2', '**']),
 
   fill('fn-fi-04','functions','medium',
-    'What is the output?\n\ndef greet(name):\n    print(f"Hi, {name}!")\n\ngreet("Ava")',
+    'What is the output?\n\ndef greet(name):\n    print("Hi, " + name + "!")\n\ngreet("Ava")',
     ['Hi, Ava!']),
 
   fill('fn-fi-05','functions','medium',
@@ -819,7 +819,7 @@ export const QUIZ_QUESTIONS = [
     'Arrange these lines to define and call a function that prints a greeting.',
     { items: [
       'def greet(name):',
-      '    print(f"Hello, {name}!")',
+      '    print("Hello, " + name + "!")',
       'greet("Alice")',
     ]}),
 
