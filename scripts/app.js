@@ -6,6 +6,7 @@ import { PythonRunner, detectConstructs, pep8Lint } from './runner.js';
 import { renderDashboard, initDashboard } from './dashboard.js';
 import { ChallengeManager }              from './challenges.js';
 import { renderAdmin, initAdmin }        from './admin.js';
+import { QuizManager }                   from './quiz.js';
 import { initSuggestions, teardownSuggestions, setupSuggestionsUI } from './suggestions.js';
 import {
   saveNewProgram, updateProgram, loadProgram,
@@ -66,6 +67,10 @@ const adminPanel        = $('admin-panel');
 const closeAdminBtn     = $('btn-close-admin');
 const adminContent      = $('admin-content');
 
+const quizPanel         = $('quiz-panel');
+const quizBtn           = $('btn-quiz');
+const closeQuizBtn      = $('btn-close-quiz');
+
 const themeToggleBtn    = $('btn-theme');
 const themeIconDark     = $('theme-icon-dark');
 const themeIconLight    = $('theme-icon-light');
@@ -98,6 +103,9 @@ const checkAutoIndent   = $('auto-indent');
 const programSearch     = $('program-search');
 
 // ── State ─────────────────────────────────────────────────────────────────────
+
+const quiz = new QuizManager();
+let _quizMounted = false;
 
 let currentUser      = null;
 let currentProfile   = null;
@@ -220,6 +228,7 @@ onAuth(async (user, profile) => {
   initAdmin(user, profile);
   initDashboard(user, profile);
   initSuggestions(user, profile);
+  quiz.init(user.uid);
 
   await refreshProgramList();
   newProgram();
@@ -728,6 +737,12 @@ adminBtn?.addEventListener('click', () => {
   renderAdmin(adminContent);
 });
 closeAdminBtn?.addEventListener('click', () => hide(adminPanel));
+
+quizBtn?.addEventListener('click', () => {
+  show(quizPanel);
+  if (!_quizMounted) { quiz.mount(quizPanel); _quizMounted = true; }
+});
+closeQuizBtn?.addEventListener('click', () => hide(quizPanel));
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CLASS CODE
