@@ -204,14 +204,14 @@ export function generateDemoData() {
   const sessions = _makeSessions(students, now, DAY);
 
   const allQuizProgress = {
-    // Alice: diligent — 80 questions, avg box 3–4, ~85% correct
-    'demo-alice': _makeQuizProgress(80, 0.85, 3.5, now - 1 * DAY),
-    // Ben: 50 questions, avg box 2–3, ~70% correct
-    'demo-ben':   _makeQuizProgress(50, 0.70, 2.5, now - 2 * DAY),
+    // Alice: diligent — 80 questions, avg box 2–3, ~85% correct
+    'demo-alice': _makeQuizProgress(80, 0.85, 2.5, now - 1 * DAY),
+    // Ben: 50 questions, avg box 2, ~70% correct
+    'demo-ben':   _makeQuizProgress(50, 0.70, 2.0, now - 2 * DAY),
     // Chloe: 35 questions, avg box 1–2, ~60% correct
-    'demo-chloe': _makeQuizProgress(35, 0.60, 1.8, now - 3 * 3600000),
-    // Dylan: 20 questions — mostly variables/operators, avg box 1–2, ~55% correct
-    'demo-dylan': _makeQuizProgress(20, 0.55, 1.5, now - 3 * DAY, ['variables', 'operators']),
+    'demo-chloe': _makeQuizProgress(35, 0.60, 1.5, now - 3 * 3600000),
+    // Dylan: 20 questions — mostly variables/operators, avg box 1, ~55% correct
+    'demo-dylan': _makeQuizProgress(20, 0.55, 1.2, now - 3 * DAY, ['variables', 'operators']),
     // Emma: 8 questions, box 1, ~40% correct
     'demo-emma':  _makeQuizProgress(8,  0.40, 1.0, now - 9 * DAY),
   };
@@ -262,7 +262,7 @@ function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {}, inProg
 
 function _makeQuizProgress(count, correctRate, avgBox, lastActiveAt, topics = null) {
   const DAY       = 86400000;
-  const INTERVALS = [0, 1, 2, 4, 8, 16]; // Leitner box → days
+  const INTERVALS = [0, 1, 4, 16]; // Leitner box → days (boxes 1–3)
   const pool      = topics
     ? QUIZ_QUESTIONS.filter(q => topics.includes(q.topic))
     : QUIZ_QUESTIONS;
@@ -275,7 +275,7 @@ function _makeQuizProgress(count, correctRate, avgBox, lastActiveAt, topics = nu
   selected.forEach((q, i) => {
     // Box: clamp 1–5, normally distributed around avgBox with some noise
     const noise = (Math.sin(i * 7.3) + Math.cos(i * 3.1)) * 0.8; // deterministic noise
-    const box   = Math.min(5, Math.max(1, Math.round(avgBox + noise)));
+    const box   = Math.min(3, Math.max(1, Math.round(avgBox + noise)));
 
     const correct    = (i / count) < correctRate; // deterministic: first N% are correct
     const daysAgo    = Math.max(0, (count - i) * 0.4); // spread attempts over recent past

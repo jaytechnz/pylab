@@ -1,12 +1,12 @@
 // ─── Quiz Manager ─────────────────────────────────────────────────────────────
 // Spaced repetition via Leitner system.
-// Boxes 1–5; intervals: 1, 2, 4, 8, 16 days.
-// Confidence ratings after each set: Again / Hard / Good / Easy.
+// Boxes 1–3; intervals: 1, 4, 16 days.
+// Confidence ratings after each set: Hard / Good / Easy.
 
 import { QUIZ_QUESTIONS } from './quiz-data.js';
 import { getQuizProgress, saveQuizProgress } from './storage.js';
 
-const LEITNER_INTERVALS = [0, 1, 2, 4, 8, 16]; // index = box number, value = days
+const LEITNER_INTERVALS = [0, 1, 4, 16]; // index = box number (1–3), value = days
 
 const TOPIC_LABELS = {
   variables: 'Variables & I/O',
@@ -115,15 +115,15 @@ export class QuizManager {
     filtered.forEach(q => {
       const prog = this._progress[q.id];
       if (!prog)                                           { newQ++;      return; }
-      if (prog.box >= 5 && (prog.nextReviewAt ?? 0) > now){ mastered++;  return; }
+      if (prog.box >= 3 && (prog.nextReviewAt ?? 0) > now){ mastered++;  return; }
       if ((prog.nextReviewAt ?? 0) <= now)                 { due++;       return; }
       learning++;
     });
 
-    const boxCounts = [0, 0, 0, 0, 0, 0]; // index 0 unused; 1–5
+    const boxCounts = [0, 0, 0, 0]; // index 0 unused; 1–3
     filtered.forEach(q => {
       const b = this._progress[q.id]?.box ?? 0;
-      if (b >= 1 && b <= 5) boxCounts[b]++;
+      if (b >= 1 && b <= 3) boxCounts[b]++;
     });
 
     return { due, new: newQ, mastered, learning, total: filtered.length, boxCounts };
@@ -168,7 +168,7 @@ export class QuizManager {
         </div>
 
         <div class="qz-leitner-vis">
-          ${[1,2,3,4,5].map(box => {
+          ${[1,2,3].map(box => {
             const cnt = stats.boxCounts[box];
             const h   = Math.round((cnt / maxBar) * 60);
             return `<div class="qz-box-col">
@@ -208,7 +208,7 @@ export class QuizManager {
     let html = `<div class="qz-answering">`;
 
     this._currentSet.forEach((q, i) => {
-      const box = this._progress[q.id]?.box ?? 0;
+      const box = Math.min(3, this._progress[q.id]?.box ?? 0);
       const boxBadge = box > 0
         ? `<span class="qz-box-badge qz-box-badge--${box}">Box ${box}</span>`
         : `<span class="qz-box-badge qz-box-badge--new">New</span>`;
@@ -523,8 +523,8 @@ export class QuizManager {
     switch (rating) {
       case 'again': box = 1;                       break;
       case 'hard':  box = Math.max(1, box);        break;  // stay; shorter interval below
-      case 'good':  box = Math.min(5, box + 1);   break;
-      case 'easy':  box = Math.min(5, box + 2);   break;
+      case 'good':  box = Math.min(3, box + 1);   break;
+      case 'easy':  box = Math.min(3, box + 2);   break;
     }
 
     const baseDays      = LEITNER_INTERVALS[box] ?? 1;
