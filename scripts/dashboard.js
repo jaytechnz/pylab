@@ -3,10 +3,12 @@
 import {
   getAllStudents, getSessions, aggregateAnalytics,
   getAllChallengeProgress, getAllTeacherFeedback, saveTeacherFeedback,
-  getClassNames, saveClassName
+  getClassNames, saveClassName,
+  saveChallengeProgress, updateLeaderboard
 } from './storage.js';
 import { EXERCISES, CATEGORIES } from './exercises.js';
 import { generateDemoData }       from './demo-data.js';
+import { PythonRunner }           from './runner.js';
 
 const TOTAL_EXERCISES = EXERCISES.length;  // 130
 
@@ -16,6 +18,11 @@ let _allProgress = null;
 let _feedback    = null;
 let _classNames  = {};
 let _containerEl = null;
+let _role        = '';
+
+export function initDashboard(user, profile) {
+  _role = profile?.role ?? '';
+}
 
 // Demo mode — swaps live Firestore data with generated fake data
 let _isDemoMode   = false;
@@ -75,6 +82,7 @@ function _render(container, selectedClass) {
     <div class="dash-toolbar">
       <div class="dash-filter-bar">${filterButtons}</div>
       <div class="dash-toolbar-right">
+        ${_role === 'superadmin' ? `<button class="btn-ghost btn-sm dash-revalidate-btn" id="btn-revalidate" title="Re-run all saved student code against the current tests">Re-validate All</button>` : ''}
         ${demoToggle}
         <button class="btn-ghost btn-sm dash-export-btn" id="btn-export-csv">Export CSV</button>
       </div>
@@ -104,6 +112,10 @@ function _render(container, selectedClass) {
 
   container.querySelector('#btn-export-csv')?.addEventListener('click', () =>
     _exportCSV(students)
+  );
+
+  container.querySelector('#btn-revalidate')?.addEventListener('click', () =>
+    _revalidateAll(students)
   );
 
   const grid = container.querySelector('#dash-inner');
@@ -567,22 +579,27 @@ function _showStudentDrillDown(grid, student) {
       </tr>`;
     }).join('');
 
-  // In-progress exercises — attempted but not completed, sorted by attempt count desc
+  // In-progress exercises — attempted or code saved, but not completed
   const attempts = prog.attempts ?? {};
-  const inProgressRows = EXERCISES
-    .filter(ex => attempts[ex.id] && !prog.completed?.[ex.id])
-    .sort((a, b) => (attempts[b.id] ?? 0) - (attempts[a.id] ?? 0))
-    .map(ex => {
-      const count  = attempts[ex.id] ?? 0;
-      const hasCode = !!prog.submissions?.[ex.id]?.code;
-      return `<tr class="ex-row ${hasCode ? 'ex-row--clickable' : ''}" data-ex-id="${ex.id}" data-state="progress">
-        <td><span class="ex-status-dot progress">…</span></td>
-        <td>${escHtml(ex.title)}</td>
-        <td class="ex-cat">${escHtml(ex.category)}</td>
-        <td class="ex-date">${count} attempt${count !== 1 ? 's' : ''}</td>
-        <td>${hasCode ? '<span class="ex-view-code">View code ›</span>' : '<span class="ex-no-code">—</span>'}</td>
-      </tr>`;
-    }).join('');
+  const inProgressExs = EXERCISES
+    .filter(ex => !prog.completed?.[ex.id] &&
+      (attempts[ex.id] > 0 || prog.submissions?.[ex.id]?.code))
+    .sort((a, b) => (attempts[b.id] ?? 0) - (attempts[a.id] ?? 0));
+
+  const inProgressRows = inProgressExs.map(ex => {
+    const count   = attempts[ex.id] ?? 0;
+    const hasCode = !!prog.submissions?.[ex.id]?.code;
+    const dateCell = count > 0
+      ? `${count} attempt${count !== 1 ? 's' : ''}`
+      : `<span class="ex-saved-label">Saved, not run</span>`;
+    return `<tr class="ex-row ${hasCode ? 'ex-row--clickable' : ''}" data-ex-id="${ex.id}" data-state="progress">
+      <td><span class="ex-status-dot progress">…</span></td>
+      <td>${escHtml(ex.title)}</td>
+      <td class="ex-cat">${escHtml(ex.category)}</td>
+      <td class="ex-date">${dateCell}</td>
+      <td>${hasCode ? '<span class="ex-view-code">View code ›</span>' : '<span class="ex-no-code">—</span>'}</td>
+    </tr>`;
+  }).join('');
 
   const exTable = (rows, emptyMsg) => rows
     ? `<div class="ex-table-wrap"><table class="ex-table">
@@ -608,7 +625,7 @@ function _showStudentDrillDown(grid, student) {
 
       <div class="drilldown-col-wide">
         <div class="drilldown-section">
-          <div class="drilldown-section-title">In Progress (${Object.keys(inProgressRows ? attempts : {}).length} exercises)</div>
+          <div class="drilldown-section-title">In Progress (${inProgressExs.length} exercises)</div>
           ${exTable(inProgressRows, 'No exercises in progress.')}
         </div>
         <div class="drilldown-section">
@@ -1206,6 +1223,155 @@ function _sortTable(th) {
   table.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
   th.classList.add('sorted');
   rows.forEach(r => tbody.appendChild(r));
+}
+
+// ── Re-validate all submissions (superadmin only) ─────────────────────────────
+
+async function _revalidateAll(students) {
+  if (!students.length) return;
+
+  // Build modal
+  const overlay = document.createElement('div');
+  overlay.className = 'rv-overlay';
+  overlay.innerHTML = `
+    <div class="rv-card">
+      <div class="rv-title">Re-validating Submissions</div>
+      <p class="rv-subtitle">Re-running all saved student code against the current exercise tests and rules.</p>
+      <div class="rv-progress-track"><div class="rv-progress-bar" id="rv-bar"></div></div>
+      <div class="rv-label" id="rv-label">Starting…</div>
+      <div class="rv-changes" id="rv-changes" style="display:none"></div>
+      <div class="rv-actions">
+        <button class="btn-ghost btn-sm" id="rv-cancel">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  let cancelled = false;
+  overlay.querySelector('#rv-cancel').addEventListener('click', () => { cancelled = true; });
+
+  const runner = new PythonRunner({
+    onOutput: () => {}, onError: () => {}, onComplete: () => {},
+    onInputRequest: () => Promise.resolve(''), turtleTarget: null
+  });
+
+  const total = students.length;
+  let done = 0;
+  const changes = [];
+
+  for (const student of students) {
+    if (cancelled) break;
+
+    const prog = (_allProgress ?? {})[student.uid];
+    if (!prog) { done++; continue; }
+
+    const submissions  = prog.submissions ?? {};
+    const oldCompleted = prog.completed   ?? {};
+    const newCompleted = {};
+    let   newXP        = 0;
+
+    const exsWithCode = EXERCISES.filter(ex => submissions[ex.id]?.code);
+
+    for (const ex of exsWithCode) {
+      if (cancelled) break;
+
+      overlay.querySelector('#rv-label').textContent =
+        `${student.displayName ?? student.email} — ${ex.title}`;
+
+      const code = submissions[ex.id].code;
+
+      // ── Static inputType check ──
+      if (ex.inputType) {
+        const needsInt   = ex.inputType === 'int'   || ex.inputType === 'int_float';
+        const needsFloat = ex.inputType === 'float' || ex.inputType === 'int_float';
+        if ((needsInt   && !/\bint\s*\(\s*input\s*\(/.test(code)) ||
+            (needsFloat && !/\bfloat\s*\(\s*input\s*\(/.test(code))) {
+          continue; // fails convention — not completed
+        }
+      }
+
+      // ── Run Skulpt tests ──
+      let allPass = true;
+      for (const tc of ex.tests) {
+        const { outputs, error } = await runner.runForTests(code, tc.inputs);
+        if (error || !_compareOutputsRV(outputs, tc.expected)) { allPass = false; break; }
+      }
+
+      if (allPass) {
+        // Preserve original completedAt timestamp if it existed
+        newCompleted[ex.id] = oldCompleted[ex.id] ?? { completedAt: Date.now() };
+        newXP += ex.xp;
+      }
+    }
+
+    const oldDone = Object.keys(oldCompleted).length;
+    const newDone = Object.keys(newCompleted).length;
+    const oldXP   = prog.totalXP ?? 0;
+
+    if (oldDone !== newDone || oldXP !== newXP) {
+      changes.push({
+        name: student.displayName ?? student.email,
+        oldDone, newDone, oldXP, newXP
+      });
+    }
+
+    // Save updated progress
+    const updatedProg = { ...prog, completed: newCompleted, totalXP: newXP };
+    try {
+      await saveChallengeProgress(student.uid, updatedProg);
+      if (student.classCode) {
+        await updateLeaderboard(
+          student.uid, student.classCode,
+          student.displayName ?? student.email, newXP
+        );
+      }
+      if (_allProgress) _allProgress[student.uid] = updatedProg;
+    } catch (e) {
+      console.warn('Re-validate: save failed for', student.uid, e);
+    }
+
+    done++;
+    overlay.querySelector('#rv-bar').style.width = Math.round((done / total) * 100) + '%';
+  }
+
+  if (cancelled) {
+    overlay.remove();
+    return;
+  }
+
+  // Show summary
+  overlay.querySelector('#rv-bar').style.width = '100%';
+  overlay.querySelector('#rv-bar').classList.add('rv-bar--done');
+  overlay.querySelector('#rv-label').textContent =
+    changes.length
+      ? `Done — ${changes.length} student record${changes.length !== 1 ? 's' : ''} updated.`
+      : 'Done — all records are already up to date.';
+
+  if (changes.length) {
+    const changesEl = overlay.querySelector('#rv-changes');
+    changesEl.style.display = '';
+    changesEl.innerHTML = changes.map(c => {
+      const dir = c.newDone > c.oldDone ? '▲' : c.newDone < c.oldDone ? '▼' : '~';
+      const cls = c.newDone > c.oldDone ? 'rv-chg--up' : c.newDone < c.oldDone ? 'rv-chg--down' : '';
+      return `<div class="rv-change-row ${cls}">
+        <span class="rv-chg-name">${escHtml(c.name)}</span>
+        <span class="rv-chg-stat">${dir} ${c.oldDone}→${c.newDone} exercises &nbsp;·&nbsp; ${c.oldXP}→${c.newXP} XP</span>
+      </div>`;
+    }).join('');
+  }
+
+  const cancelBtn = overlay.querySelector('#rv-cancel');
+  cancelBtn.textContent = 'Close & Refresh';
+  cancelBtn.addEventListener('click', () => {
+    overlay.remove();
+    _render(_containerEl, null);
+  }, { once: true });
+}
+
+function _compareOutputsRV(got, expected) {
+  const clean = arr => { const a = [...arr]; while (a.length && a[a.length - 1] === '') a.pop(); return a; };
+  const g = clean(got.map(l => l.trimEnd()));
+  const e = clean(expected.map(l => l.trimEnd()));
+  return g.length === e.length && g.every((line, i) => line === e[i]);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
