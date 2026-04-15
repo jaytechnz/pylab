@@ -5,6 +5,156 @@
 import { EXERCISES } from './exercises.js';
 import { SOLUTIONS } from './solutions.js';
 
+// Realistic student attempt code for in-progress exercises.
+// Each snippet is a plausible near-miss a student might write.
+const IN_PROGRESS_CODE = {
+
+  // Alice — stuck on hard Functions (95/130 done)
+  'fn-20': `\
+def to_binary(n):
+    bits = ""
+    while n > 0:
+        bits = str(n % 2) + bits
+        n = n // 2
+    return bits
+
+print(to_binary(10))
+print(to_binary(255))
+`,
+  // Missing the n == 0 edge case — prints "" for 0 instead of "0"
+
+  'fn-21': `\
+def get_positive_int(prompt):
+    try:
+        value = int(input())
+        if value > 0:
+            return value
+    except:
+        pass
+
+age = get_positive_int("Enter age: ")
+print(age)
+`,
+  // Missing the while True loop — gives up after one bad input instead of looping
+
+  'fn-22': `\
+def print_table(n):
+    header = "     "
+    for j in range(1, n + 1):
+        header += str(j).rjust(4)
+    print(header)
+    for i in range(1, n + 1):
+        row = str(i)
+        for j in range(1, n + 1):
+            row += str(i * j).rjust(4)
+        print(row)
+
+print_table(4)
+`,
+  // Using rjust(4) — output is one character too narrow for the expected format
+
+  // Ben — stuck on hard Iteration (65/130 done)
+  'itr-15': `\
+n = int(input())
+is_prime = True
+for i in range(2, n):
+    if n % i == 0:
+        is_prime = False
+        break
+if is_prime:
+    print("Prime")
+else:
+    print("Not prime")
+`,
+  // Doesn't handle n <= 1 — prints "Prime" for 1, should print "Not prime"
+
+  'itr-16': `\
+n = int(input())
+prev, curr = 0, 1
+for i in range(n):
+    print(curr)
+    prev, curr = curr, prev + curr
+`,
+  // Prints curr instead of prev — sequence starts 1, 1, 2, 3... instead of 0, 1, 1, 2...
+
+  'itr-17': `\
+correct = "secure99"
+for attempt in range(3):
+    password = input()
+    if password == correct:
+        print("Welcome!")
+        break
+    else:
+        print("Incorrect. Try again.")
+print("Account locked.")
+`,
+  // Always prints "Account locked." even when login succeeds
+
+  // Chloe — stuck on Rock Paper Scissors and early Iteration (48/130 done)
+  'sel-15': `\
+p1 = input()
+p2 = input()
+if p1 == p2:
+    print("Draw")
+elif p1 == "rock" and p2 == "scissors":
+    print("Player 1 wins")
+elif p1 == "paper" and p2 == "rock":
+    print("Player 2 wins")
+elif p1 == "scissors" and p2 == "paper":
+    print("Player 1 wins")
+else:
+    print("Player 2 wins")
+`,
+  // paper beats rock gives "Player 2 wins" — swapped Player 1 and Player 2 for that case
+
+  'itr-01': `\
+for i in range(10):
+    print(i)
+`,
+  // range(10) gives 0–9, not 1–10 — should be range(1, 11)
+
+  // Dylan — stuck on hard Operators (28/130 done)
+  'ops-14': `\
+pi = 3.14159
+radius = input()
+area = pi * radius ** 2
+print(round(area, 2))
+`,
+  // Missing float() — bare input() returns a string, causes TypeError
+
+  'ops-16': `\
+weight = input()
+height = input()
+bmi = weight / height ** 2
+print(round(bmi, 1))
+`,
+  // Missing float() on both inputs — will crash with TypeError on arithmetic
+
+  'ops-17': `\
+total = int(input())
+hours = total // 3600
+minutes = total // 60
+seconds = total % 60
+print(str(hours) + " hours, " + str(minutes) + " minutes, " + str(seconds) + " seconds")
+`,
+  // minutes = total // 60 ignores hours — gives wrong minutes (e.g. 3661 → 61 min, not 1)
+
+  // Emma — stuck on basic Variables I/O (6/130 done)
+  'var-07': `\
+name = input()
+print("Hello " + name)
+`,
+  // Missing comma and exclamation mark — should be "Hello, <name>!"
+
+  'var-08': `\
+first_name = input()
+last_name = input()
+print(first_name + last_name)
+`,
+  // Missing the space between names — prints "JamesBond" instead of "James Bond"
+
+};
+
 export function generateDemoData() {
   const now = Date.now();
   const DAY = 86400000;
@@ -20,28 +170,33 @@ export function generateDemoData() {
   const allProgress = {
     // Alice: 95/130 — Ahead. Low hint usage. Grinding through Functions.
     'demo-alice': _makeProgress(95, now - 1 * DAY, {
-      attempts:  { 'fn-20': 3, 'fn-21': 4, 'fn-22': 6 },
-      hintsUsed: { 'fn-15': 1, 'fn-17': 2 },
+      attempts:       { 'fn-20': 3, 'fn-21': 4, 'fn-22': 6 },
+      hintsUsed:      { 'fn-15': 1, 'fn-17': 2 },
+      inProgressCode: { 'fn-20': IN_PROGRESS_CODE['fn-20'], 'fn-21': IN_PROGRESS_CODE['fn-21'], 'fn-22': IN_PROGRESS_CODE['fn-22'] },
     }),
     // Ben: 65/130 — On Track. Stuck on hard Iteration exercises.
     'demo-ben': _makeProgress(65, now - 2 * DAY, {
-      attempts:  { 'itr-15': 6, 'itr-16': 4, 'itr-17': 5 },
-      hintsUsed: { 'itr-15': 3, 'itr-17': 3, 'sel-15': 2 },
+      attempts:       { 'itr-15': 6, 'itr-16': 4, 'itr-17': 5 },
+      hintsUsed:      { 'itr-15': 3, 'itr-17': 3, 'sel-15': 2 },
+      inProgressCode: { 'itr-15': IN_PROGRESS_CODE['itr-15'], 'itr-16': IN_PROGRESS_CODE['itr-16'], 'itr-17': IN_PROGRESS_CODE['itr-17'] },
     }),
     // Chloe: 48/130 — On Track but heavy hint user (intervention signal).
     'demo-chloe': _makeProgress(48, now - 3 * 3600000, {
-      attempts:  { 'sel-15': 7, 'itr-01': 3 },
-      hintsUsed: { 'sel-10': 3, 'sel-11': 2, 'sel-12': 3, 'sel-13': 2, 'sel-14': 3, 'sel-15': 4 },
+      attempts:       { 'sel-15': 7, 'itr-01': 3 },
+      hintsUsed:      { 'sel-10': 3, 'sel-11': 2, 'sel-12': 3, 'sel-13': 2, 'sel-14': 3, 'sel-15': 4 },
+      inProgressCode: { 'sel-15': IN_PROGRESS_CODE['sel-15'], 'itr-01': IN_PROGRESS_CODE['itr-01'] },
     }),
     // Dylan: 28/130 — Behind. Stuck on medium/hard Operators exercises.
     'demo-dylan': _makeProgress(28, now - 3 * DAY, {
-      attempts:  { 'ops-14': 6, 'ops-16': 7, 'ops-17': 5 },
-      hintsUsed: { 'ops-14': 2, 'ops-16': 3 },
+      attempts:       { 'ops-14': 6, 'ops-16': 7, 'ops-17': 5 },
+      hintsUsed:      { 'ops-14': 2, 'ops-16': 3 },
+      inProgressCode: { 'ops-14': IN_PROGRESS_CODE['ops-14'], 'ops-16': IN_PROGRESS_CODE['ops-16'], 'ops-17': IN_PROGRESS_CODE['ops-17'] },
     }),
     // Emma: 6/130 — At Risk. Inactive for 9 days.
     'demo-emma': _makeProgress(6, now - 9 * DAY, {
-      attempts:  { 'var-07': 3, 'var-08': 4 },
-      hintsUsed: {},
+      attempts:       { 'var-07': 3, 'var-08': 4 },
+      hintsUsed:      {},
+      inProgressCode: { 'var-07': IN_PROGRESS_CODE['var-07'], 'var-08': IN_PROGRESS_CODE['var-08'] },
     }),
   };
 
@@ -52,7 +207,7 @@ export function generateDemoData() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {} } = {}) {
+function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {}, inProgressCode = {} } = {}) {
   const completed  = {};
   const submissions = {};
   let totalXP = 0;
@@ -64,6 +219,13 @@ function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {} } = {})
     totalXP += ex.xp;
     if (SOLUTIONS[ex.id]) {
       submissions[ex.id] = { code: SOLUTIONS[ex.id], savedAt: now - (count - i) * 4 * 3600000 };
+    }
+  });
+
+  // Attach in-progress code for attempted-but-not-completed exercises
+  Object.entries(inProgressCode).forEach(([exId, code]) => {
+    if (!completed[exId]) {
+      submissions[exId] = { code, savedAt: now - Math.floor(Math.random() * 3600000) };
     }
   });
 
