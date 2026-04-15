@@ -29,10 +29,10 @@
 }
 
 .qz-filters select {
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text-main);
+  color: var(--text-primary);
   font-size: 0.78rem;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
@@ -74,7 +74,7 @@
   justify-content: center;
 }
 
-.qz-stat strong        { color: var(--text-main); }
+.qz-stat strong        { color: var(--text-primary); }
 .qz-stat--due strong   { color: #f59e0b; }
 .qz-stat--learning strong { color: var(--accent); }
 .qz-stat--mastered strong { color: #22c55e; }
@@ -174,7 +174,7 @@
   gap: 0.4rem;
   padding: 0.55rem 1rem;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-base);
+  background: var(--bg-surface);
   flex-wrap: wrap;
 }
 
@@ -195,13 +195,13 @@
   margin: 0 0 0.4rem;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 .qz-q-prose:last-child { margin-bottom: 0; }
 
 .qz-code {
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.55rem 0.75rem;
@@ -246,7 +246,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 7px;
-  color: var(--text-main);
+  color: var(--text-primary);
   font-size: 0.82rem;
   padding: 0.45rem 0.75rem;
   text-align: left;
@@ -276,10 +276,10 @@
 }
 
 .qz-fill-input {
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text-main);
+  color: var(--text-primary);
   font-size: 0.82rem;
   padding: 0.35rem 0.6rem;
   width: 15rem;
@@ -354,7 +354,7 @@
   min-width: 10rem;
   font-size: 0.8rem;
   font-family: 'JetBrains Mono', monospace;
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.35rem 0.6rem;
@@ -363,7 +363,7 @@
 .qz-match-dropzone {
   flex: 1;
   min-height: 2rem;
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px dashed var(--border);
   border-radius: 6px;
   padding: 0.35rem 0.6rem;
@@ -373,7 +373,7 @@
 }
 
 .qz-match-dropzone[data-placed-def] {
-  color: var(--text-main);
+  color: var(--text-primary);
   border-style: solid;
 }
 
@@ -387,7 +387,7 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   padding: 0.5rem;
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   min-height: 2.5rem;
@@ -406,7 +406,7 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   padding: 0.5rem;
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   min-height: 2.5rem;
@@ -433,7 +433,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 0.3rem 0.6rem;
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
 }
 
@@ -461,7 +461,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
-  background: linear-gradient(to bottom, transparent 0%, var(--bg-base) 30%);
+  background: linear-gradient(to bottom, transparent 0%, var(--bg-surface) 30%);
   z-index: 2;
 }
 
@@ -502,7 +502,7 @@
 .qz-score-big {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--text-primary);
   line-height: 1;
 }
 
@@ -536,7 +536,7 @@
   gap: 0.4rem;
   padding: 0.55rem 1rem;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-base);
+  background: var(--bg-surface);
   flex-wrap: wrap;
 }
 
@@ -568,7 +568,7 @@
 }
 
 .qz-answer-reveal-val {
-  color: var(--text-main);
+  color: var(--text-primary);
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.78rem;
 }
@@ -581,7 +581,7 @@
   gap: 0.75rem;
   padding: 0.6rem 1rem;
   border-top: 1px solid var(--border);
-  background: var(--bg-base);
+  background: var(--bg-surface);
   flex-wrap: wrap;
 }
 
