@@ -452,7 +452,6 @@ export class QuizManager {
           <div class="qz-conf-row">
             <span class="qz-conf-prompt">How well did you know this?</span>
             <div class="qz-conf-btns" data-qid="${q.id}">
-              <button class="qz-conf-btn qz-conf--again" data-rating="again" title="I didn't know this — review very soon">Again</button>
               <button class="qz-conf-btn qz-conf--hard"  data-rating="hard"  title="I got it but it was a struggle — stay in same box">Hard</button>
               <button class="qz-conf-btn qz-conf--good"  data-rating="good"  title="I got it with effort — move up one box">Good</button>
               <button class="qz-conf-btn qz-conf--easy"  data-rating="easy"  title="I knew it immediately — move up two boxes">Easy</button>
@@ -600,6 +599,7 @@ export class QuizManager {
       item.addEventListener('dragover', e => { e.preventDefault(); });
       item.addEventListener('drop', e => {
         e.preventDefault();
+        e.stopPropagation();
         if (src && src !== item) {
           const els = [...list.querySelectorAll('.qz-drag-item')];
           if (els.indexOf(src) < els.indexOf(item)) list.insertBefore(src, item.nextSibling);
