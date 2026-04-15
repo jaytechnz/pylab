@@ -3,7 +3,7 @@
 import { onAuth, signIn, signOutUser, resetPassword, updateUserClassCode } from './auth.js';
 import { Editor, findNonSnakeCase }      from './editor.js';
 import { PythonRunner, detectConstructs, pep8Lint } from './runner.js';
-import { renderDashboard }               from './dashboard.js';
+import { renderDashboard, initDashboard } from './dashboard.js';
 import { ChallengeManager }              from './challenges.js';
 import { renderAdmin, initAdmin }        from './admin.js';
 import { initSuggestions, teardownSuggestions, setupSuggestionsUI } from './suggestions.js';
@@ -218,6 +218,7 @@ onAuth(async (user, profile) => {
   if (isStudent) updateClassDisplay(profile?.classCode);
 
   initAdmin(user, profile);
+  initDashboard(user, profile);
   initSuggestions(user, profile);
 
   await refreshProgramList();
