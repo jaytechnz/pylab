@@ -188,6 +188,26 @@ export async function saveClassName(classCode, name) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// QUIZ PROGRESS
+// ══════════════════════════════════════════════════════════════════════════════
+
+export async function getQuizProgress(uid) {
+  const snap = await getDoc(doc(db, 'quiz_progress', uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function saveQuizProgress(uid, data) {
+  await setDoc(doc(db, 'quiz_progress', uid), data);
+}
+
+export async function getAllQuizProgress() {
+  const snap = await getDocs(collection(db, 'quiz_progress'));
+  const result = {};
+  snap.docs.forEach(d => { result[d.id] = d.data(); });
+  return result;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ANALYTICS AGGREGATION
 // ══════════════════════════════════════════════════════════════════════════════
 
