@@ -793,10 +793,12 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
   right: 4px;
   height: 70px;
   width: auto;
-  opacity: 0.35;
   pointer-events: none;
   z-index: 0;
 }
+
+[data-theme="light"] .console-robot--dark  { display: none; }
+[data-theme="dark"]  .console-robot--light { display: none; }
 
 .output-tabs {
   display: flex;
@@ -1422,6 +1424,14 @@ details[open] .ref-section-title::before { transform: rotate(90deg); }
 /* =======================================
  * FOOTER
  * ==================================== */
- footer, h6 {
+footer {
   text-align: center;
- }
+}
+
+footer h6 {
+  text-align: center;
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
