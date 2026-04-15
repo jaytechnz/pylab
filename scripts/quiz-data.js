@@ -520,7 +520,7 @@ export const QUIZ_QUESTIONS = [
     ['2']),
 
   fill('itr-fi-08','iteration','hard',
-    'What is the output? (The loop uses a for-else construct.)\n\nfor i in range(3):\n    if i == 5:\n        break\nelse:\n    print("Done")',
+    'What is the output?\n\nfor i in range(2):\n    if i == 1:\n        break\n    else:\n        print("Done")',
     ['Done']),
 
   drag('itr-dr-01','iteration','easy','match',
