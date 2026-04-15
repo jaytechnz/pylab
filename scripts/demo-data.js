@@ -2,8 +2,9 @@
 // Generates realistic fake data for 5 demo students.
 // Timestamps are computed at call time so activity charts always look current.
 
-import { EXERCISES } from './exercises.js';
-import { SOLUTIONS } from './solutions.js';
+import { EXERCISES }      from './exercises.js';
+import { SOLUTIONS }      from './solutions.js';
+import { QUIZ_QUESTIONS } from './quiz-data.js';
 
 // Realistic student attempt code for in-progress exercises.
 // Each snippet is a plausible near-miss a student might write.
@@ -202,7 +203,20 @@ export function generateDemoData() {
 
   const sessions = _makeSessions(students, now, DAY);
 
-  return { students, sessions, allProgress };
+  const allQuizProgress = {
+    // Alice: diligent — 80 questions, avg box 3–4, ~85% correct
+    'demo-alice': _makeQuizProgress(80, 0.85, 3.5, now - 1 * DAY),
+    // Ben: 50 questions, avg box 2–3, ~70% correct
+    'demo-ben':   _makeQuizProgress(50, 0.70, 2.5, now - 2 * DAY),
+    // Chloe: 35 questions, avg box 1–2, ~60% correct
+    'demo-chloe': _makeQuizProgress(35, 0.60, 1.8, now - 3 * 3600000),
+    // Dylan: 20 questions — mostly variables/operators, avg box 1–2, ~55% correct
+    'demo-dylan': _makeQuizProgress(20, 0.55, 1.5, now - 3 * DAY, ['variables', 'operators']),
+    // Emma: 8 questions, box 1, ~40% correct
+    'demo-emma':  _makeQuizProgress(8,  0.40, 1.0, now - 9 * DAY),
+  };
+
+  return { students, sessions, allProgress, allQuizProgress };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -239,6 +253,47 @@ function _makeProgress(count, lastRunAt, { attempts = {}, hintsUsed = {}, inProg
   if (totalXP >= 1000) badges.push('xp_1000');
 
   return { completed, submissions, totalXP, badges, attempts, hintsUsed, lastRunAt };
+}
+
+// ── Quiz progress helper ───────────────────────────────────────────────────────
+// Selects `count` questions from the pool (optionally filtered to topics[]),
+// assigns each a box (1–5, normally distributed around avgBox), and marks
+// ~correctRate of them as correct. Returns the Firestore `answers` wrapper.
+
+function _makeQuizProgress(count, correctRate, avgBox, lastActiveAt, topics = null) {
+  const DAY       = 86400000;
+  const INTERVALS = [0, 1, 2, 4, 8, 16]; // Leitner box → days
+  const pool      = topics
+    ? QUIZ_QUESTIONS.filter(q => topics.includes(q.topic))
+    : QUIZ_QUESTIONS;
+
+  // Pick `count` questions spread across the pool
+  const step      = Math.max(1, Math.floor(pool.length / count));
+  const selected  = pool.filter((_, i) => i % step === 0).slice(0, count);
+
+  const answers = {};
+  selected.forEach((q, i) => {
+    // Box: clamp 1–5, normally distributed around avgBox with some noise
+    const noise = (Math.sin(i * 7.3) + Math.cos(i * 3.1)) * 0.8; // deterministic noise
+    const box   = Math.min(5, Math.max(1, Math.round(avgBox + noise)));
+
+    const correct    = (i / count) < correctRate; // deterministic: first N% are correct
+    const daysAgo    = Math.max(0, (count - i) * 0.4); // spread attempts over recent past
+    const attemptedAt = lastActiveAt - daysAgo * DAY;
+    const interval    = INTERVALS[box] ?? 1;
+    // Correct answers get the full interval; incorrect get a shorter re-review
+    const nextReviewAt = attemptedAt + (correct ? interval : Math.max(1, Math.ceil(interval * 0.5))) * DAY;
+
+    answers[q.id] = {
+      box,
+      correct,
+      attemptedAt,
+      nextReviewAt,
+      confidence: correct ? (box >= 4 ? 'easy' : 'good') : (box === 1 ? 'again' : 'hard'),
+    };
+  });
+
+  return { answers };
 }
 
 function _makeSessions(students, now, DAY) {
