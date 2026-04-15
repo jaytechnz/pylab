@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/challenges.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/suggestions.css">
+  <link rel="stylesheet" href="css/quiz.css">
 </head>
 <body>
 
@@ -95,6 +96,10 @@
       <button id="btn-font" class="btn-icon header-icon-btn" title="Toggle font">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
         <span class="header-label">Aa</span>
+      </button>
+      <button id="btn-quiz" class="btn-icon header-icon-btn" title="Quiz">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="header-label">Quiz</span>
       </button>
       <button id="btn-dashboard" class="btn-icon header-icon-btn teacher-only hidden" title="Teacher Dashboard">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -575,6 +580,41 @@ for i in range(4):
     <button id="btn-close-dashboard" class="btn-ghost btn-sm">✕ Close</button>
   </div>
   <div id="dashboard-grid" class="dashboard-grid"></div>
+</div>
+
+<!-- ═══════════════════ QUIZ OVERLAY ═══════════════════ -->
+<div id="quiz-panel" class="overlay-panel quiz-overlay hidden">
+  <div class="overlay-header">
+    <span class="overlay-title">Quiz</span>
+    <div class="qz-filters" style="flex:1;border:none;padding:0 0 0 1rem;background:transparent;">
+      <span class="qz-filter-label">Topic</span>
+      <select id="quiz-filter-topic">
+        <option value="all">All Topics</option>
+        <option value="variables">Variables &amp; I/O</option>
+        <option value="operators">Operators</option>
+        <option value="selection">Selection</option>
+        <option value="iteration">Iteration</option>
+        <option value="lists">Lists</option>
+        <option value="functions">Functions</option>
+      </select>
+      <span class="qz-filter-label">Difficulty</span>
+      <select id="quiz-filter-diff">
+        <option value="all">All</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <span class="qz-filter-label">Type</span>
+      <select id="quiz-filter-type">
+        <option value="all">All Types</option>
+        <option value="mc">Multiple Choice</option>
+        <option value="fill">Fill in Blank</option>
+        <option value="drag">Drag &amp; Drop</option>
+      </select>
+    </div>
+    <button id="btn-close-quiz" class="btn-ghost btn-sm">✕ Close</button>
+  </div>
+  <div id="quiz-body"></div>
 </div>
 
 <!-- ═══════════════════ ADMIN PANEL OVERLAY ═══════════════════ -->
