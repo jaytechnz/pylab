@@ -28,10 +28,11 @@ export function initDashboard(user, profile) {
 }
 
 // Demo mode — swaps live Firestore data with generated fake data
-let _isDemoMode   = false;
-let _liveStudents = null;
-let _liveSessions = null;
-let _liveProgress = null;
+let _isDemoMode    = false;
+let _liveStudents  = null;
+let _liveSessions  = null;
+let _liveProgress  = null;
+let _liveQuizProg  = null;
 
 export async function renderDashboard(containerEl) {
   _containerEl = containerEl;
@@ -53,7 +54,8 @@ export async function renderDashboard(containerEl) {
   _liveStudents  = _students;
   _liveSessions  = _sessions;
   _liveProgress  = _allProgress;
-  _allQuizProg   = _allQuizProg ?? {};
+  _liveQuizProg  = _allQuizProg ?? {};
+  _allQuizProg   = _liveQuizProg;
   _isDemoMode   = false;
   _render(containerEl, null);
 }
@@ -105,12 +107,14 @@ function _render(container, selectedClass) {
       _students    = _liveStudents;
       _sessions    = _liveSessions;
       _allProgress = _liveProgress;
+      _allQuizProg = _liveQuizProg;
     } else {
       _isDemoMode  = true;
       const demo   = generateDemoData();
       _students    = demo.students;
       _sessions    = demo.sessions;
       _allProgress = demo.allProgress;
+      _allQuizProg = demo.allQuizProgress ?? {};
     }
     _render(container, null);
   });
