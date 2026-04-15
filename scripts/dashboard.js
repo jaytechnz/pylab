@@ -4,21 +4,24 @@ import {
   getAllStudents, getSessions, aggregateAnalytics,
   getAllChallengeProgress, getAllTeacherFeedback, saveTeacherFeedback,
   getClassNames, saveClassName,
-  saveChallengeProgress, updateLeaderboard
+  saveChallengeProgress, updateLeaderboard,
+  getAllQuizProgress
 } from './storage.js';
 import { EXERCISES, CATEGORIES } from './exercises.js';
+import { QUIZ_QUESTIONS }         from './quiz-data.js';
 import { generateDemoData }       from './demo-data.js';
 import { PythonRunner }           from './runner.js';
 
 const TOTAL_EXERCISES = EXERCISES.length;  // 130
 
-let _students    = null;
-let _sessions    = null;
-let _allProgress = null;
-let _feedback    = null;
-let _classNames  = {};
-let _containerEl = null;
-let _role        = '';
+let _students     = null;
+let _sessions     = null;
+let _allProgress  = null;
+let _allQuizProg  = null;
+let _feedback     = null;
+let _classNames   = {};
+let _containerEl  = null;
+let _role         = '';
 
 export function initDashboard(user, profile) {
   _role = profile?.role ?? '';
@@ -37,18 +40,20 @@ export async function renderDashboard(containerEl) {
     [_students, _sessions, _allProgress] = await Promise.all([
       getAllStudents(), getSessions(), getAllChallengeProgress()
     ]);
-    [_feedback, _classNames] = await Promise.all([
+    [_feedback, _classNames, _allQuizProg] = await Promise.all([
       getAllTeacherFeedback().catch(() => ({})),
-      getClassNames().catch(() => ({}))
+      getClassNames().catch(() => ({})),
+      getAllQuizProgress().catch(() => ({}))
     ]);
   } catch (e) {
     containerEl.innerHTML = `<p class="dash-error">Failed to load dashboard: ${escHtml(e.message)}</p>`;
     return;
   }
   // Save live data so we can restore it after demo mode
-  _liveStudents = _students;
-  _liveSessions = _sessions;
-  _liveProgress = _allProgress;
+  _liveStudents  = _students;
+  _liveSessions  = _sessions;
+  _liveProgress  = _allProgress;
+  _allQuizProg   = _allQuizProg ?? {};
   _isDemoMode   = false;
   _render(containerEl, null);
 }
@@ -144,6 +149,7 @@ function _render(container, selectedClass) {
     ${_buildResilienceCard(students)}
     ${_buildAtRiskCard(students)}
     ${_buildCohortCard(students)}
+    ${_buildQuizOverviewCard(students)}
     ${_buildStudentTable(students)}
     ${_buildHardestExercisesCard(students)}
     ${_buildContentQualityCard(students)}
@@ -478,6 +484,76 @@ function _buildAtRiskCard(students) {
   </div>`;
 }
 
+// ── Quiz overview card ────────────────────────────────────────────────────────
+
+const QUIZ_TOPICS = ['variables','operators','selection','iteration','lists','functions'];
+const QUIZ_TOPIC_LABELS = { variables:'Variables & I/O', operators:'Operators', selection:'Selection', iteration:'Iteration', lists:'Lists', functions:'Functions' };
+
+function _buildQuizOverviewCard(students) {
+  const qp = _allQuizProg ?? {};
+  const total = QUIZ_QUESTIONS.length;
+
+  if (!students.length) return '';
+
+  const studentRows = students.map(s => {
+    const answers  = qp[s.uid]?.answers ?? {};
+    const done     = Object.keys(answers).length;
+    const correct  = Object.values(answers).filter(a => a.correct).length;
+    const pct      = done ? Math.round((correct / done) * 100) : null;
+    const barW     = Math.round((done / total) * 100);
+    const score    = pct !== null ? `${pct}%` : '—';
+    return `<tr>
+      <td>${escHtml(s.displayName ?? s.email)}</td>
+      <td>
+        <div class="td-progress-wrap">
+          <div class="td-progress-bar" style="width:${barW}%"></div>
+          <span class="td-progress-label">${done}/${total}</span>
+        </div>
+      </td>
+      <td style="color:${pct >= 70 ? 'var(--accent)' : pct >= 50 ? 'var(--warning)' : pct !== null ? 'var(--error)' : 'var(--text-muted)'}">${score}</td>
+    </tr>`;
+  }).join('');
+
+  const topicBars = QUIZ_TOPICS.map(topic => {
+    const topicQs  = QUIZ_QUESTIONS.filter(q => q.topic === topic);
+    let totalCorrect = 0, totalAnswered = 0;
+    students.forEach(s => {
+      const answers = qp[s.uid]?.answers ?? {};
+      topicQs.forEach(q => {
+        if (answers[q.id]) { totalAnswered++; if (answers[q.id].correct) totalCorrect++; }
+      });
+    });
+    const pct    = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+    const barCol = pct >= 70 ? 'var(--accent)' : pct >= 50 ? 'var(--warning)' : 'var(--error)';
+    return `<div class="dash-progress-row">
+      <span class="dash-progress-label">${QUIZ_TOPIC_LABELS[topic]}</span>
+      <div class="dash-progress-bar-wrap"><div class="dash-progress-bar" style="width:${pct}%;background:${barCol}"></div></div>
+      <span class="dash-progress-pct">${totalAnswered ? pct + '%' : '—'}</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="dash-card dash-card--wide">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Quiz Progress
+    </div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+      <div style="flex:1;min-width:220px;">
+        <div class="dash-sub-note" style="margin-bottom:0.5rem;">Accuracy by topic (class average)</div>
+        <div class="dash-progress-list">${topicBars}</div>
+      </div>
+      <div style="flex:2;min-width:300px;">
+        <div class="dash-table-wrap">
+          <table class="dash-table">
+            <thead><tr><th>Student</th><th>Questions Done</th><th>Score</th></tr></thead>
+            <tbody>${studentRows || '<tr><td colspan="3" style="color:var(--text-muted)">No quiz data yet.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ── Student table ─────────────────────────────────────────────────────────────
 
 function _buildStudentTable(students) {
@@ -611,39 +687,104 @@ function _showStudentDrillDown(grid, student) {
        </table></div>`
     : `<p class="feedback-empty">${emptyMsg}</p>`;
 
+  // Quiz section for this student
+  const quizAnswers = (_allQuizProg ?? {})[student.uid]?.answers ?? {};
+  const quizDone    = Object.keys(quizAnswers).length;
+  const quizCorrect = Object.values(quizAnswers).filter(a => a.correct).length;
+  const quizScore   = quizDone ? Math.round((quizCorrect / quizDone) * 100) : null;
+
+  const quizTopicBars = QUIZ_TOPICS.map(topic => {
+    const topicQs     = QUIZ_QUESTIONS.filter(q => q.topic === topic);
+    const answered    = topicQs.filter(q => quizAnswers[q.id]);
+    const correct     = answered.filter(q => quizAnswers[q.id].correct);
+    const pct         = answered.length ? Math.round((correct.length / answered.length) * 100) : 0;
+    const barCol      = answered.length === 0 ? 'var(--border)' : pct >= 70 ? 'var(--accent)' : pct >= 50 ? 'var(--warning)' : 'var(--error)';
+    return `<div class="dash-progress-row">
+      <span class="dash-progress-label">${QUIZ_TOPIC_LABELS[topic]}</span>
+      <div class="dash-progress-bar-wrap"><div class="dash-progress-bar" style="width:${pct}%;background:${barCol}"></div></div>
+      <span class="dash-progress-pct">${answered.length ? `${correct.length}/${answered.length}` : '—'}</span>
+    </div>`;
+  }).join('');
+
+  const sUID = escHtml(student.uid);
+
   const html = `<div class="student-drilldown-panel">
     <div class="drilldown-header">
       <strong>${escHtml(student.displayName ?? student.email)}</strong>
       <span class="drilldown-stats">${done} completed · ${xp} XP · ${hints} hints used${firstAttemptRate !== null ? ` · ${firstAttemptRate}% first-try` : ''}${hintFreeCount ? ` · ${hintFreeCount} hint-free` : ''}${abandonedCount ? ` · ${abandonedCount} abandoned` : ''}</span>
       <button class="btn-ghost btn-sm drilldown-close-btn">✕ Close</button>
     </div>
-    <div class="drilldown-body drilldown-body--cols">
 
-      <div class="drilldown-col-narrow">
-        <div class="drilldown-section">
-          <div class="drilldown-section-title">Topic Breakdown</div>
-          <div class="dash-progress-list">${catBars}</div>
-        </div>
-      </div>
-
-      <div class="drilldown-col-wide">
-        <div class="drilldown-section">
-          <div class="drilldown-section-title">In Progress (${inProgressExs.length} exercises)</div>
-          ${exTable(inProgressRows, 'No exercises in progress.')}
-        </div>
-        <div class="drilldown-section">
-          <div class="drilldown-section-title">Completed (${done} exercises)</div>
-          ${exTable(completedRows, 'No completed exercises yet.')}
-        </div>
-      </div>
-
+    <div class="drilldown-tabs">
+      <button class="drilldown-tab active" data-tab="challenges">Challenges</button>
+      <button class="drilldown-tab" data-tab="quiz">Quiz${quizDone ? ` <span class="drilldown-tab-badge">${quizScore !== null ? quizScore + '%' : quizDone}</span>` : ''}</button>
     </div>
-    <div class="code-viewer hidden" id="code-viewer-${escHtml(student.uid)}">
+
+    <div class="drilldown-tab-pane" data-pane="challenges">
+      <div class="drilldown-body drilldown-body--cols">
+        <div class="drilldown-col-narrow">
+          <div class="drilldown-section">
+            <div class="drilldown-section-title">Topic Breakdown</div>
+            <div class="dash-progress-list">${catBars}</div>
+          </div>
+        </div>
+        <div class="drilldown-col-wide">
+          <div class="drilldown-section">
+            <div class="drilldown-section-title">In Progress (${inProgressExs.length} exercises)</div>
+            ${exTable(inProgressRows, 'No exercises in progress.')}
+          </div>
+          <div class="drilldown-section">
+            <div class="drilldown-section-title">Completed (${done} exercises)</div>
+            ${exTable(completedRows, 'No completed exercises yet.')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="drilldown-tab-pane hidden" data-pane="quiz">
+      <div class="drilldown-body drilldown-body--cols">
+        <div class="drilldown-col-narrow">
+          <div class="drilldown-section">
+            <div class="drilldown-section-title">Quiz Summary</div>
+            <div class="drilldown-quiz-stats">
+              <div class="drilldown-quiz-stat"><span class="drilldown-quiz-val">${quizDone}</span><span class="drilldown-quiz-lbl">Answered</span></div>
+              <div class="drilldown-quiz-stat"><span class="drilldown-quiz-val">${quizCorrect}</span><span class="drilldown-quiz-lbl">Correct</span></div>
+              <div class="drilldown-quiz-stat"><span class="drilldown-quiz-val">${quizScore !== null ? quizScore + '%' : '—'}</span><span class="drilldown-quiz-lbl">Score</span></div>
+            </div>
+          </div>
+          <div class="drilldown-section">
+            <div class="drilldown-section-title">By Topic</div>
+            <div class="dash-progress-list">${quizTopicBars}</div>
+          </div>
+        </div>
+        <div class="drilldown-col-wide">
+          <div class="drilldown-section">
+            <div class="drilldown-section-title">Questions Answered</div>
+            ${quizDone ? `<div class="ex-table-wrap"><table class="ex-table">
+              <thead><tr><th></th><th>Question</th><th>Topic</th><th>Difficulty</th></tr></thead>
+              <tbody>
+                ${QUIZ_QUESTIONS.filter(q => quizAnswers[q.id]).map(q => {
+                  const correct = quizAnswers[q.id].correct;
+                  return `<tr>
+                    <td><span class="ex-status-dot ${correct ? 'done' : 'progress'}">${correct ? '✓' : '✗'}</span></td>
+                    <td class="ex-title-cell">${escHtml(q.q.split('\n')[0].substring(0, 60))}${q.q.length > 60 ? '…' : ''}</td>
+                    <td class="ex-cat">${QUIZ_TOPIC_LABELS[q.topic] ?? q.topic}</td>
+                    <td><span class="qz-diff qz-diff--${q.difficulty}">${q.difficulty}</span></td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table></div>` : '<p class="feedback-empty">No quiz questions answered yet.</p>'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-viewer hidden" id="code-viewer-${sUID}">
       <div class="code-viewer-header">
-        <span class="code-viewer-title" id="code-viewer-title-${escHtml(student.uid)}"></span>
+        <span class="code-viewer-title" id="code-viewer-title-${sUID}"></span>
         <button class="btn-ghost btn-sm code-viewer-close">✕</button>
       </div>
-      <pre class="code-viewer-body" id="code-viewer-body-${escHtml(student.uid)}"></pre>
+      <pre class="code-viewer-body" id="code-viewer-body-${sUID}"></pre>
     </div>
   </div>`;
 
@@ -663,6 +804,16 @@ function _showStudentDrillDown(grid, student) {
   container.querySelector('.drilldown-close-btn')?.addEventListener('click', () => {
     container.innerHTML = '';
     container.dataset.uid = '';
+  });
+
+  // Tab switching
+  container.querySelectorAll('.drilldown-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      container.querySelectorAll('.drilldown-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const pane = tab.dataset.tab;
+      container.querySelectorAll('.drilldown-tab-pane').forEach(p => p.classList.toggle('hidden', p.dataset.pane !== pane));
+    });
   });
 
   // Code viewer
