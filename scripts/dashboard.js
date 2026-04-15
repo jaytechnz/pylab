@@ -568,14 +568,15 @@ function _showStudentDrillDown(grid, student) {
     .sort((a, b) => (prog.completed[b.id].completedAt ?? 0) - (prog.completed[a.id].completedAt ?? 0))
     .map(ex => {
       const completedAt = prog.completed[ex.id].completedAt;
-      const dateStr = completedAt ? new Date(completedAt).toLocaleDateString('en-GB') : '—';
-      const hasCode = !!prog.submissions?.[ex.id]?.code;
+      const dateStr  = completedAt ? new Date(completedAt).toLocaleDateString('en-GB') : '—';
+      const attCount = prog.attempts?.[ex.id] ?? 1;
+      const hasCode  = !!prog.submissions?.[ex.id]?.code;
       return `<tr class="ex-row ${hasCode ? 'ex-row--clickable' : ''}" data-ex-id="${ex.id}" data-state="done">
         <td><span class="ex-status-dot done">✓</span></td>
-        <td>${escHtml(ex.title)}</td>
+        <td class="ex-title-cell">${escHtml(ex.title)}${hasCode ? ' <span class="ex-code-hint">›</span>' : ''}</td>
         <td class="ex-cat">${escHtml(ex.category)}</td>
         <td class="ex-date">${dateStr}</td>
-        <td>${hasCode ? '<span class="ex-view-code">View code ›</span>' : '<span class="ex-no-code">—</span>'}</td>
+        <td class="ex-attempts">${attCount}</td>
       </tr>`;
     }).join('');
 
@@ -587,23 +588,25 @@ function _showStudentDrillDown(grid, student) {
     .sort((a, b) => (attempts[b.id] ?? 0) - (attempts[a.id] ?? 0));
 
   const inProgressRows = inProgressExs.map(ex => {
-    const count   = attempts[ex.id] ?? 0;
-    const hasCode = !!prog.submissions?.[ex.id]?.code;
-    const dateCell = count > 0
-      ? `${count} attempt${count !== 1 ? 's' : ''}`
-      : `<span class="ex-saved-label">Saved, not run</span>`;
+    const count    = attempts[ex.id] ?? 0;
+    const hasCode  = !!prog.submissions?.[ex.id]?.code;
+    const savedAt  = prog.submissions?.[ex.id]?.savedAt;
+    const dateStr  = savedAt ? new Date(savedAt).toLocaleDateString('en-GB') : '—';
+    const attCell  = count > 0
+      ? String(count)
+      : `<span class="ex-saved-label">—</span>`;
     return `<tr class="ex-row ${hasCode ? 'ex-row--clickable' : ''}" data-ex-id="${ex.id}" data-state="progress">
       <td><span class="ex-status-dot progress">…</span></td>
-      <td>${escHtml(ex.title)}</td>
+      <td class="ex-title-cell">${escHtml(ex.title)}${hasCode ? ' <span class="ex-code-hint">›</span>' : ''}</td>
       <td class="ex-cat">${escHtml(ex.category)}</td>
-      <td class="ex-date">${dateCell}</td>
-      <td>${hasCode ? '<span class="ex-view-code">View code ›</span>' : '<span class="ex-no-code">—</span>'}</td>
+      <td class="ex-date">${dateStr}</td>
+      <td class="ex-attempts">${attCell}</td>
     </tr>`;
   }).join('');
 
   const exTable = (rows, emptyMsg) => rows
     ? `<div class="ex-table-wrap"><table class="ex-table">
-        <thead><tr><th></th><th>Exercise</th><th>Topic</th><th>Date / Attempts</th><th>Code</th></tr></thead>
+        <thead><tr><th></th><th>Exercise</th><th>Topic</th><th>Date</th><th>Attempts</th></tr></thead>
         <tbody>${rows}</tbody>
        </table></div>`
     : `<p class="feedback-empty">${emptyMsg}</p>`;
