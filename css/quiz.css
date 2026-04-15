@@ -455,17 +455,16 @@
   position: sticky;
   bottom: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 0;
+  justify-content: center;
+  padding: 1rem 0 0.5rem;
   background: linear-gradient(to bottom, transparent 0%, var(--bg-surface) 30%);
   z-index: 2;
 }
 
 .qz-submit-all-btn {
-  font-size: 0.9rem;
-  padding: 0.55rem 1.75rem;
+  font-size: 1rem;
+  padding: 0.7rem 3rem;
+  min-width: 220px;
 }
 
 /* ─── REVIEWING STATE ────────────────────────────────────────────────────── */
