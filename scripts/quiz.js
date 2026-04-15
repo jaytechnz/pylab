@@ -218,7 +218,6 @@ export class QuizManager {
           <div class="qz-q-header">
             <span class="qz-q-num">${i + 1}</span>
             <span class="qz-topic-badge">${escHtml(TOPIC_LABELS[q.topic] ?? q.topic)}</span>
-            <span class="qz-diff qz-diff--${q.difficulty}">${q.difficulty}</span>
             ${boxBadge}
           </div>
           <div class="qz-q-body">${this._formatQ(q.q)}</div>
@@ -230,7 +229,6 @@ export class QuizManager {
 
     html += `
       <div class="qz-submit-bar">
-        <button class="btn-ghost btn-sm" id="qz-cancel">← Back</button>
         <button class="btn-accent qz-submit-all-btn" id="qz-submit-all">Submit All Answers</button>
       </div>
     </div>`;
@@ -322,7 +320,6 @@ export class QuizManager {
   _bindAnsweringEvents() {
     const body = this._bodyEl;
 
-    body.querySelector('#qz-cancel')?.addEventListener('click', () => this._goHome());
     body.querySelector('#qz-submit-all')?.addEventListener('click', () => this._submitAll());
 
     // MC selection
@@ -367,7 +364,7 @@ export class QuizManager {
         answer  = [...inputs].map(i => i.value.trim());
         correct = answer.every((v, i) => {
           const accepted = Array.isArray(q.blanks[i]) ? q.blanks[i] : [q.blanks[i]];
-          return accepted.some(a => a.toLowerCase() === v.toLowerCase());
+          return accepted.some(a => _normQ(a).toLowerCase() === _normQ(v).toLowerCase());
         }) && answer.length > 0;
       }
 
@@ -437,7 +434,6 @@ export class QuizManager {
             <span class="qz-result-icon">${res.correct ? '✓' : '✗'}</span>
             <span class="qz-q-num">${i + 1}</span>
             <span class="qz-topic-badge">${escHtml(TOPIC_LABELS[q.topic] ?? q.topic)}</span>
-            <span class="qz-diff qz-diff--${q.difficulty}">${q.difficulty}</span>
             <span class="qz-box-badge qz-box-badge--${curBox}">Box ${curBox}</span>
           </div>
 
@@ -705,6 +701,17 @@ export class QuizManager {
     });
     return { total, done, correct, byTopic };
   }
+}
+
+// Normalise quoted strings so "text" and 'text' compare equal.
+// Handles \' escape inside single-quoted strings (e.g. 'it\'s').
+function _normQ(s) {
+  if (s == null) return '';
+  const dq = /^"((?:[^"\\]|\\.)*)"$/.exec(s);
+  if (dq) return dq[1].replace(/\\"/g, '"');
+  const sq = /^'((?:[^'\\]|\\.)*)'$/.exec(s);
+  if (sq) return sq[1].replace(/\\'/g, "'");
+  return s;
 }
 
 function escHtml(s) {

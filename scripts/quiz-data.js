@@ -90,7 +90,7 @@ export const QUIZ_QUESTIONS = [
 
   fill('var-fi-08','variables','hard',
     'Complete the code to print a full name with a space between first and last:\n\nfirst = "John"\nlast  = "Smith"\nprint(first + ___ + last)',
-    ['" "', "' '"]),
+    ['" "']),
 
   drag('var-dr-01','variables','easy','match',
     'Match each Python data type to an example value.',

@@ -271,8 +271,16 @@ export class ChallengeManager {
       while (a.length && a[a.length-1] === '') a.pop();
       return a;
     };
-    const g = clean(got.map(l => l.trimEnd()));
-    const e = clean(expected.map(l => l.trimEnd()));
+    // Normalise quoted strings: "text" and 'text' compare equal; \' allowed inside '...'
+    const normQ = s => {
+      const dq = /^"((?:[^"\\]|\\.)*)"$/.exec(s);
+      if (dq) return dq[1].replace(/\\"/g, '"');
+      const sq = /^'((?:[^'\\]|\\.)*)'$/.exec(s);
+      if (sq) return sq[1].replace(/\\'/g, "'");
+      return s;
+    };
+    const g = clean(got.map(l => normQ(l.trimEnd())));
+    const e = clean(expected.map(l => normQ(l.trimEnd())));
     if (g.length !== e.length) return false;
     return g.every((line, i) => line === e[i]);
   }
