@@ -608,12 +608,6 @@
   font-family: inherit;
 }
 
-.qz-conf--again {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
-}
-
 .qz-conf--hard {
   border-color: #f97316;
   color: #f97316;
@@ -638,7 +632,6 @@
   opacity: 1 !important;
 }
 
-.qz-conf--again.qz-conf-selected  { background: rgba(239, 68, 68, 0.2); }
 .qz-conf--hard.qz-conf-selected   { background: rgba(249, 115, 22, 0.2); }
 .qz-conf--good.qz-conf-selected   { background: rgba(var(--accent-rgb, 34,197,94), 0.2); }
 .qz-conf--easy.qz-conf-selected   { background: rgba(96, 165, 250, 0.2); }
