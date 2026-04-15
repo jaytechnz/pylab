@@ -291,7 +291,7 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 .login-footer {
   text-align: center;
   margin-top: 1.5rem;
-  color: var(--text-muted);
+  color: var(--sidebar-text-muted);
   font-size: 0.75rem;
   line-height: 1.6;
 }
