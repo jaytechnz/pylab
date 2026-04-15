@@ -418,14 +418,9 @@
 .ex-status-dot.done     { background: rgba(34,197,94,0.15); color: var(--accent); }
 .ex-status-dot.progress { background: rgba(245,158,11,0.15); color: var(--warning); }
 
-.ex-cat   { color: var(--text-muted); font-size: 0.7rem; }
-.ex-date  { color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; }
-.ex-view-code {
-  color: var(--accent); font-size: 0.72rem; font-weight: 600;
-  white-space: nowrap; cursor: pointer;
-}
-.ex-view-code:hover { text-decoration: underline; }
-.ex-no-code { color: var(--text-muted); font-size: 0.7rem; }
+.ex-cat      { color: var(--text-muted); font-size: 0.7rem; }
+.ex-date     { color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; }
+.ex-attempts { color: var(--text-muted); font-size: 0.7rem; text-align: center; }
 
 /* Code viewer */
 .code-viewer {
@@ -640,3 +635,14 @@
 .ex-saved-label {
   font-size: 0.73rem; color: var(--text-muted); font-style: italic;
 }
+
+/* ── Exercise title cell & code-available hint ── */
+.ex-title-cell { font-weight: 500; }
+.ex-row--clickable .ex-title-cell { cursor: pointer; }
+.ex-row--clickable:hover .ex-title-cell { color: var(--accent); }
+.ex-code-hint {
+  font-size: 0.7rem; color: var(--text-muted);
+  opacity: 0; transition: opacity 0.15s;
+  margin-left: 3px;
+}
+.ex-row--clickable:hover .ex-code-hint { opacity: 1; }
