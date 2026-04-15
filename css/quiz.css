@@ -117,11 +117,9 @@
   transition: height 0.3s ease;
 }
 
-.qz-box-bar--1 { background: #ef4444; }
-.qz-box-bar--2 { background: #f97316; }
-.qz-box-bar--3 { background: #eab308; }
-.qz-box-bar--4 { background: #84cc16; }
-.qz-box-bar--5 { background: #22c55e; }
+.qz-box-bar--1 { background: #f97316; }
+.qz-box-bar--2 { background: #eab308; }
+.qz-box-bar--3 { background: #22c55e; }
 
 .qz-box-label {
   font-size: 0.65rem;
@@ -699,8 +697,6 @@
 }
 
 .qz-box-badge--new { background: rgba(148,163,184,0.15); color: #94a3b8; }
-.qz-box-badge--1   { background: rgba(239,68,68,0.12);   color: #ef4444; }
-.qz-box-badge--2   { background: rgba(249,115,22,0.12);  color: #f97316; }
-.qz-box-badge--3   { background: rgba(234,179,8,0.12);   color: #ca8a04; }
-.qz-box-badge--4   { background: rgba(132,204,22,0.12);  color: #84cc16; }
-.qz-box-badge--5   { background: rgba(34,197,94,0.12);   color: #22c55e; }
+.qz-box-badge--1   { background: rgba(249,115,22,0.12);  color: #f97316; }
+.qz-box-badge--2   { background: rgba(234,179,8,0.12);   color: #ca8a04; }
+.qz-box-badge--3   { background: rgba(34,197,94,0.12);   color: #22c55e; }
