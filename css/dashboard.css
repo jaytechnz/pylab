@@ -577,3 +577,66 @@
 @media (max-width: 680px) {
   .content-quality-cols { grid-template-columns: 1fr; }
 }
+
+/* ── Re-validate button ── */
+.dash-revalidate-btn {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+.dash-revalidate-btn:hover {
+  background: rgba(var(--accent-rgb, 34,197,94), 0.1) !important;
+}
+
+/* ── Re-validate modal overlay ── */
+.rv-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.rv-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.75rem 2rem;
+  width: min(480px, 90vw); box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.rv-title {
+  font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+.rv-subtitle {
+  font-size: 0.8rem; color: var(--text-muted); margin: 0 0 1.1rem;
+}
+.rv-progress-track {
+  height: 6px; background: var(--border); border-radius: 99px;
+  overflow: hidden; margin-bottom: 0.75rem;
+}
+.rv-progress-bar {
+  height: 100%; width: 0%; background: var(--accent);
+  border-radius: 99px; transition: width 0.3s ease;
+}
+.rv-bar--done { background: var(--accent); }
+.rv-label {
+  font-size: 0.82rem; color: var(--text-secondary); min-height: 2.5em;
+  margin-bottom: 0.75rem;
+}
+.rv-changes {
+  max-height: 180px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 0.5rem 0.6rem; margin-bottom: 0.9rem;
+  font-size: 0.78rem;
+}
+.rv-change-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 3px 0; gap: 0.5rem; border-bottom: 1px solid var(--border);
+}
+.rv-change-row:last-child { border-bottom: none; }
+.rv-chg-name { font-weight: 600; color: var(--text-primary); }
+.rv-chg-stat { color: var(--text-muted); white-space: nowrap; }
+.rv-chg--up   .rv-chg-stat { color: var(--accent); }
+.rv-chg--down .rv-chg-stat { color: var(--error); }
+.rv-actions { display: flex; justify-content: flex-end; }
+
+/* ── In-progress "Saved, not run" label ── */
+.ex-saved-label {
+  font-size: 0.73rem; color: var(--text-muted); font-style: italic;
+}
