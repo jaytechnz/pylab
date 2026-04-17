@@ -172,8 +172,12 @@ export class PythonRunner {
           return Sk.builtinFiles.files[filename];
         throw new Error(`File not found: '${filename}'`);
       },
-      inputfun: (prompt) => {
-        console.log('[DEBUG inputfun] prompt:', JSON.stringify(prompt), 'outputs at call time:', JSON.stringify(outputs));
+      inputfun: () => {
+        // Skulpt outputs the prompt via output() before calling inputfun (with empty prompt).
+        // Strip it: prompt outputs never end with \n, but print() outputs always do.
+        if (outputs.length && !outputs[outputs.length - 1].endsWith('\n')) {
+          outputs.pop();
+        }
         const val = inputQueue.shift() ?? '';
         return Promise.resolve(val);
       },
@@ -193,9 +197,6 @@ export class PythonRunner {
     const lines = outputs.join('').split('\n').map(l => l.trimEnd());
     // Remove trailing empty string from split
     if (lines.length && lines[lines.length - 1] === '') lines.pop();
-
-    console.log('[TEST DEBUG] raw outputs:', JSON.stringify(outputs));
-    console.log('[TEST DEBUG] lines:', JSON.stringify(lines));
 
     return { outputs: lines, error: errorMsg };
   }
