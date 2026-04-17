@@ -450,6 +450,46 @@
   line-height: 1.6;
 }
 
+/* ── Teacher feedback section (inside code viewer) ── */
+.teacher-feedback-section {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.teacher-feedback-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.teacher-feedback-existing {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  min-height: 1rem;
+}
+.teacher-feedback-existing--saved { color: var(--accent); font-style: normal; }
+.teacher-feedback-textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 0.5rem 0.65rem;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+.teacher-feedback-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* ── Feedback card (kept for compatibility) ── */
 .feedback-summary { display: flex; flex-direction: column; gap: 0.5rem; }
 .feedback-item {

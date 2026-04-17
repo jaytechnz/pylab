@@ -154,7 +154,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding-bottom: 5rem; /* space for sticky submit bar */
 }
 
 /* Individual question card */
@@ -246,7 +245,7 @@
   border-radius: 7px;
   color: var(--text-primary);
   font-size: 0.82rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.65rem 0.9rem;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.12s, background 0.12s;
@@ -279,7 +278,7 @@
   border-radius: 6px;
   color: var(--text-primary);
   font-size: 0.82rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.55rem 0.75rem;
   width: 15rem;
   font-family: 'JetBrains Mono', monospace;
 }
@@ -304,7 +303,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 0.35rem 0.6rem;
+  padding: 0.6rem 0.75rem;
   font-size: 0.8rem;
   cursor: grab;
   user-select: none;
@@ -449,16 +448,12 @@
   background: rgba(var(--accent-rgb, 34,197,94), 0.06);
 }
 
-/* Submit bar — sticky at the bottom of the panel */
+/* Submit bar — at the end of the question list */
 
 .qz-submit-bar {
-  position: sticky;
-  bottom: 0;
   display: flex;
   justify-content: center;
-  padding: 1rem 0 0.5rem;
-  background: linear-gradient(to bottom, transparent 0%, var(--bg-surface) 30%);
-  z-index: 2;
+  padding: 1.25rem 0 0.5rem;
 }
 
 .qz-submit-all-btn {
