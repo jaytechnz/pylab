@@ -172,7 +172,12 @@ export class PythonRunner {
           return Sk.builtinFiles.files[filename];
         throw new Error(`File not found: '${filename}'`);
       },
-      inputfun: () => {
+      inputfun: (prompt) => {
+        // Skulpt calls output(prompt) before calling inputfun, so the prompt
+        // lands in our outputs array. Remove it so it doesn't appear in results.
+        if (prompt && outputs.length && outputs[outputs.length - 1] === prompt) {
+          outputs.pop();
+        }
         const val = inputQueue.shift() ?? '';
         return Promise.resolve(val);
       },
