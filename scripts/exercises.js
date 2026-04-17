@@ -201,7 +201,7 @@ ex('ops-07','operators','Power / Exponent','easy',
 
 ex('ops-08','operators','All Three Divisions','medium',
 `Ask for two integers a and b. Print three results on separate lines:<br>1. a / b (float division)<br>2. a // b (integer division)<br>3. a % b (modulus)`,
-[t(['10','3'],['3.3333333333333335','3','1']),
+[t(['10','3'],['3.333333333333333','3','1']),
  t(['17','5'],['3.4','3','2'])],
 ['Three separate print statements', 'Use /, // and %'],
 'int'),
