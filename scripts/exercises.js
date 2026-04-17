@@ -79,7 +79,7 @@ ex('var-09','variables','Repeat a String','easy',
 ['In Python, you can multiply a string: "ha" * 3 gives "hahaha"', 'No loop needed — just multiply']),
 
 ex('var-10','variables','Type Check','easy',
-`Create one variable of each data type: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>. Print <code>type()</code> of each. The output should be: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code> (one per line as shown by type()).`,
+`Assign a literal value to one variable of each type: an <code>int</code>, a <code>float</code>, a <code>str</code>, and a <code>bool</code>. Do <strong>not</strong> use <code>input()</code> — just assign values directly (e.g. <code>my_int = 42</code>). Print <code>type()</code> of each variable. Output should be the four type names, one per line.`,
 [t([],["<class 'int'>","<class 'float'>","<class 'str'>","<class 'bool'>"])],
 ['type() returns the data type', 'Call print(type(my_variable)) for each']),
 
