@@ -213,9 +213,9 @@ ex('ops-09','operators','Odd or Even Check','medium',
 'int'),
 
 ex('ops-10','operators','Type Cast: str to int','medium',
-`Ask the user for their birth year as input. Calculate how old they will be in 2030. Print the result.`,
-[t(['2011'],['19']),t(['2008'],['22'])],
-['You MUST convert input to int before subtracting', 'age = 2030 - int(input())'],
+`Ask the user for their birth year as input. Calculate how old they will be in 2050. Print the result.`,
+[t(['2011'],['39']),t(['2008'],['42'])],
+['You MUST convert input to int before subtracting', 'age = 2050 - int(input())'],
 'int'),
 
 ex('ops-11','operators','String to Float','medium',
