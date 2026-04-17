@@ -142,7 +142,7 @@ ex('var-20','variables','Mad Libs Story','hard',
 ['Four input() calls', 'Build the sentence using string concatenation']),
 
 ex('var-21','variables','Character Profile','hard',
-`Create a character profile. Ask for: name, class (e.g. "Warrior"), level (int), health (int). Print in this format:<br><code>=== Character Profile ===</code><br><code>Name: &lt;name&gt;</code><br><code>Class: &lt;class&gt;</code><br><code>Level: &lt;level&gt;</code><br><code>Health: &lt;health&gt; HP</code>`,
+`Create a character profile. Ask for: name, character class (e.g. "Warrior"), level (int), health (int). Note: <code>class</code> is a reserved keyword in Python — store the class in a variable named <code>char_class</code>. Print in this format:<br><code>=== Character Profile ===</code><br><code>Name: &lt;name&gt;</code><br><code>Class: &lt;char_class&gt;</code><br><code>Level: &lt;level&gt;</code><br><code>Health: &lt;health&gt; HP</code>`,
 [t(['Aragorn','Ranger','15','200'],['=== Character Profile ===','Name: Aragorn','Class: Ranger','Level: 15','Health: 200 HP'])],
 ['Four inputs (two strings, two ints)', 'Six lines of output'],
 'int'),
