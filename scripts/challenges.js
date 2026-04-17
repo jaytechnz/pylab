@@ -311,7 +311,13 @@ export class ChallengeManager {
     const g = clean(got.map(l => normQ(l.trimEnd())));
     const e = clean(expected.map(l => normQ(l.trimEnd())));
     if (g.length !== e.length) return false;
-    return g.every((line, i) => line === e[i]);
+    return g.every((line, i) => {
+      if (line === e[i]) return true;
+      // Accept tiny floating-point rounding differences (e.g. 78.54000000000001 vs 78.54)
+      if (/^-?\d+\.\d+$/.test(line) && /^-?\d+\.\d+$/.test(e[i]))
+        return Math.abs(parseFloat(line) - parseFloat(e[i])) < 1e-9;
+      return false;
+    });
   }
 
   _renderTestResults(results, allPass) {
