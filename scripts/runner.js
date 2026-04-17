@@ -198,6 +198,9 @@ export class PythonRunner {
     // Remove trailing empty string from split
     if (lines.length && lines[lines.length - 1] === '') lines.pop();
 
+    console.log('[TEST DEBUG] raw outputs:', JSON.stringify(outputs));
+    console.log('[TEST DEBUG] lines:', JSON.stringify(lines));
+
     return { outputs: lines, error: errorMsg };
   }
 
