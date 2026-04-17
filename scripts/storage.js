@@ -157,7 +157,8 @@ export async function getAllLeaderboardEntries() {
 export async function saveTeacherFeedback(teacherUid, studentUid, exId, comment) {
   await setDoc(doc(db, 'teacher_feedback', `${studentUid}_${exId}`), {
     teacherUid, studentUid, exId, comment,
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    readAt: null
   });
 }
 
@@ -170,6 +171,28 @@ export async function getAllTeacherFeedback() {
     result[data.studentUid][data.exId] = data.comment;
   });
   return result;
+}
+
+export async function getStudentFeedback(uid) {
+  const snap = await getDocs(
+    query(collection(db, 'teacher_feedback'), where('studentUid', '==', uid))
+  );
+  const result = {};
+  snap.docs.forEach(d => {
+    const data = d.data();
+    result[data.exId] = {
+      comment:   data.comment,
+      updatedAt: data.updatedAt,
+      readAt:    data.readAt ?? null
+    };
+  });
+  return result;
+}
+
+export async function markFeedbackRead(studentUid, exId) {
+  await updateDoc(doc(db, 'teacher_feedback', `${studentUid}_${exId}`), {
+    readAt: serverTimestamp()
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

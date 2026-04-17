@@ -5,7 +5,8 @@ import { EXERCISES, CATEGORIES } from './exercises.js';
 import { PythonRunner }           from './runner.js';
 import {
   getChallengeProgress, saveChallengeProgress,
-  updateLeaderboard, getClassLeaderboard
+  updateLeaderboard, getClassLeaderboard,
+  getStudentFeedback, markFeedbackRead
 } from './storage.js';
 
 // ── Badges ───────────────────────────────────────────────────────────────────
@@ -64,6 +65,7 @@ export class ChallengeManager {
     this.currentExercise = null;
     this._hintIndex     = 0;
     this._autoSaveTimer = null;
+    this._feedback      = {};
 
     // DOM refs
     this.challengeList  = $('challenge-list');
@@ -72,6 +74,7 @@ export class ChallengeManager {
     this.panelBody      = $('ch-panel-body');
     this.panelBadge     = $('ch-panel-badge');
     this.testResults    = $('ch-test-results');
+    this.feedbackEl     = $('ch-feedback');
     this.closePanelBtn  = $('btn-close-challenge');
     this.hintBtn        = $('btn-hint');
     this.xpDisplay      = $('ch-xp-display');
@@ -90,8 +93,12 @@ export class ChallengeManager {
     this._displayName = displayName;
     this.role         = role;
     try {
-      const saved = await getChallengeProgress(uid);
-      if (saved) this.progress = saved;
+      const [saved, feedback] = await Promise.all([
+        getChallengeProgress(uid),
+        getStudentFeedback(uid).catch(() => ({}))
+      ]);
+      if (saved)    this.progress  = saved;
+      if (feedback) this._feedback = feedback;
     } catch (e) {
       console.warn('Could not load challenge progress:', e);
     }
@@ -112,6 +119,7 @@ export class ChallengeManager {
     this.uid         = null;
     this.classCode   = '';
     this.progress    = { completed: {}, totalXP: 0, badges: [], submissions: {} };
+    this._feedback   = {};
     this.currentExercise = null;
     if (this.challengePanel) this.challengePanel.classList.add('hidden');
   }
@@ -138,12 +146,15 @@ export class ChallengeManager {
       const isOpen = localStorage.getItem(`ch_cat_${cat.id}`) !== 'closed';
 
       const items = exList.map(ex => {
-        const isDone = !!completed[ex.id];
-        const isActive = this.currentExercise?.id === ex.id;
+        const isDone     = !!completed[ex.id];
+        const isActive   = this.currentExercise?.id === ex.id;
+        const fb         = this._feedback[ex.id];
+        const hasUnread  = fb && !fb.readAt;
         return `<div class="ch-exercise-item ${isDone ? 'completed' : ''} ${isActive ? 'active' : ''}"
                      data-id="${ex.id}" title="${ex.title}">
           <span class="ch-ex-status">${isDone ? '✓' : '○'}</span>
           <span class="ch-ex-name">${escHtml(ex.title)}</span>
+          ${hasUnread ? '<span class="ch-ex-feedback-dot" title="New teacher feedback">●</span>' : ''}
           <span class="ch-ex-diff diff-${ex.difficulty}">${ex.difficulty[0].toUpperCase()}</span>
           <span class="ch-ex-xp">${ex.xp}xp</span>
         </div>`;
@@ -196,6 +207,24 @@ export class ChallengeManager {
     this.panelBadge.className    = `ch-difficulty-badge badge-${ex.difficulty}`;
     this.panelBody.innerHTML     = ex.description;
     this.testResults.innerHTML   = '';
+
+    // Show teacher feedback if present
+    const fb = this._feedback[ex.id];
+    if (fb && this.feedbackEl) {
+      const isUnread = !fb.readAt;
+      this.feedbackEl.className = 'ch-feedback' + (isUnread ? ' ch-feedback--unread' : '');
+      this.feedbackEl.innerHTML = `<span class="ch-feedback-icon">💬</span><span class="ch-feedback-text">${escHtml(fb.comment)}</span>`;
+      if (isUnread && this.uid) {
+        markFeedbackRead(this.uid, ex.id).then(() => {
+          this._feedback[ex.id] = { ...fb, readAt: Date.now() };
+          this.feedbackEl.classList.remove('ch-feedback--unread');
+          this.renderSidebar();
+        }).catch(() => {});
+      }
+    } else if (this.feedbackEl) {
+      this.feedbackEl.className = 'ch-feedback hidden';
+      this.feedbackEl.innerHTML = '';
+    }
 
     if (this.challengePanel) this.challengePanel.classList.remove('hidden');
     this.renderSidebar();

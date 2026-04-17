@@ -98,8 +98,6 @@ const tabPrograms       = $('tab-programs');
 const tabChallenges     = $('tab-challenges');
 const sidebarProgView   = $('sidebar-programs-view');
 const sidebarChalView   = $('sidebar-challenges-view');
-const checkSnakeCase    = $('check-snake-case');
-const checkAutoIndent   = $('auto-indent');
 const programSearch     = $('program-search');
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -544,13 +542,9 @@ function appendOutput(text, type = 'stdout') {
   // Remove placeholder
   el.querySelector('.output-placeholder')?.remove();
 
-  const span = document.createElement('span');
-  span.className = `output-line out-${type}`;
-
-  // text might include newlines — split and add multiple spans
-  const lines = text.split('\n');
-  lines.forEach((line, i) => {
-    if (i > 0) el.appendChild(document.createElement('br'));
+  // Strip trailing newline then split — avoids empty trailing block span
+  const lines = text.replace(/\n$/, '').split('\n');
+  lines.forEach(line => {
     const s = document.createElement('span');
     s.className = `output-line out-${type}`;
     s.textContent = line;
@@ -610,14 +604,6 @@ editor.onChange(() => {
 editorTextarea?.addEventListener('click',   updateStatusBar);
 editorTextarea?.addEventListener('keydown', updateStatusBar);
 
-checkSnakeCase?.addEventListener('change', () => {
-  editor.setSnakeCase(checkSnakeCase.checked);
-  updatePep8Indicator();
-});
-checkAutoIndent?.addEventListener('change', () => {
-  editor.setAutoIndent(checkAutoIndent.checked);
-});
-
 function updateStatusBar() {
   const { line, col } = editor.getCursorLineCol();
   if (statusLineCol) statusLineCol.textContent = `Ln ${line}, Col ${col}`;
@@ -627,7 +613,7 @@ function updatePep8Indicator() {
   if (!pep8Indicator) return;
   const source   = editor.getValue();
   const warnings = pep8Lint(source);
-  const snakeIssues = checkSnakeCase?.checked ? findNonSnakeCase(source) : [];
+  const snakeIssues = [];
   const total    = warnings.length + snakeIssues.length;
   if (total === 0) {
     pep8Indicator.textContent = 'PEP 8 ✓';

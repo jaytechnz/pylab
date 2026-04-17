@@ -23,8 +23,11 @@ let _classNames   = {};
 let _containerEl  = null;
 let _role         = '';
 
+let _teacherUid = null;
+
 export function initDashboard(user, profile) {
-  _role = profile?.role ?? '';
+  _role       = profile?.role ?? '';
+  _teacherUid = user?.uid ?? null;
 }
 
 // Demo mode — swaps live Firestore data with generated fake data
@@ -789,6 +792,12 @@ function _showStudentDrillDown(grid, student) {
         <button class="btn-ghost btn-sm code-viewer-close">✕</button>
       </div>
       <pre class="code-viewer-body" id="code-viewer-body-${sUID}"></pre>
+      <div class="teacher-feedback-section">
+        <div class="teacher-feedback-label">Teacher Feedback</div>
+        <div class="teacher-feedback-existing" id="feedback-existing-${sUID}"></div>
+        <textarea class="teacher-feedback-textarea" id="feedback-textarea-${sUID}" placeholder="Write feedback for this student…" rows="3"></textarea>
+        <button class="btn-accent btn-sm" id="feedback-save-${sUID}">Save Feedback</button>
+      </div>
     </div>
   </div>`;
 
@@ -824,9 +833,36 @@ function _showStudentDrillDown(grid, student) {
   const viewer      = container.querySelector(`#code-viewer-${student.uid}`);
   const viewerTitle = container.querySelector(`#code-viewer-title-${student.uid}`);
   const viewerBody  = container.querySelector(`#code-viewer-body-${student.uid}`);
+  const fbExisting  = container.querySelector(`#feedback-existing-${student.uid}`);
+  const fbTextarea  = container.querySelector(`#feedback-textarea-${student.uid}`);
+  const fbSaveBtn   = container.querySelector(`#feedback-save-${student.uid}`);
+
+  let _currentExId = null;
 
   container.querySelector('.code-viewer-close')?.addEventListener('click', () => {
     viewer?.classList.add('hidden');
+  });
+
+  fbSaveBtn?.addEventListener('click', async () => {
+    if (!_currentExId) return;
+    const comment = fbTextarea.value.trim();
+    if (!comment) return;
+    fbSaveBtn.disabled    = true;
+    fbSaveBtn.textContent = 'Saving…';
+    try {
+      await saveTeacherFeedback(_teacherUid, student.uid, _currentExId, comment);
+      if (!_feedback)               _feedback = {};
+      if (!_feedback[student.uid])  _feedback[student.uid] = {};
+      _feedback[student.uid][_currentExId] = comment;
+      fbExisting.textContent = 'Feedback saved.';
+      fbExisting.className   = 'teacher-feedback-existing teacher-feedback-existing--saved';
+      fbSaveBtn.textContent  = 'Saved ✓';
+      setTimeout(() => { fbSaveBtn.disabled = false; fbSaveBtn.textContent = 'Save Feedback'; }, 2000);
+    } catch (e) {
+      fbSaveBtn.disabled    = false;
+      fbSaveBtn.textContent = 'Save Feedback';
+      alert('Error saving feedback: ' + e.message);
+    }
   });
 
   container.querySelectorAll('.ex-row--clickable').forEach(row => {
@@ -836,12 +872,23 @@ function _showStudentDrillDown(grid, student) {
       const code = prog.submissions?.[exId]?.code ?? '';
       if (!code || !viewer) return;
 
+      _currentExId = exId;
+
       // Highlight currently selected row
       container.querySelectorAll('.ex-row--clickable').forEach(r => r.classList.remove('ex-row--active'));
       row.classList.add('ex-row--active');
 
       if (viewerTitle) viewerTitle.textContent = `${student.displayName ?? student.email} — ${ex?.title ?? exId}`;
       if (viewerBody)  viewerBody.textContent  = code;
+
+      // Populate feedback
+      const existing = _feedback?.[student.uid]?.[exId] ?? '';
+      if (fbTextarea) fbTextarea.value = existing;
+      if (fbExisting) {
+        fbExisting.textContent = existing ? `Current feedback: "${existing}"` : '';
+        fbExisting.className   = 'teacher-feedback-existing';
+      }
+
       viewer.classList.remove('hidden');
       viewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });

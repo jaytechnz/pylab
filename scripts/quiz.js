@@ -369,10 +369,9 @@ export class QuizManager {
       }
 
       else if (q.type === 'drag' && q.subtype === 'order') {
-        const list     = body.querySelector(`.qz-drag-order-list[data-qid="${q.id}"]`);
-        const shuffled = this._seededShuffle([...q.items], q.id);
+        const list = body.querySelector(`.qz-drag-order-list[data-qid="${q.id}"]`);
         answer  = [...list.querySelectorAll('.qz-drag-item')]
-                    .map(el => shuffled[parseInt(el.dataset.item)]);
+                    .map(el => el.querySelector('code').textContent);
         correct = answer.every((item, i) => item === q.items[i]);
       }
 
