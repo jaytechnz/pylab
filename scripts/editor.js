@@ -311,6 +311,25 @@ export class Editor {
       return;
     }
 
+    // ── Colon: snap else/elif/except/finally back to correct indent ──────
+    if (e.key === ':' && this._autoIndentEnabled && ta.selectionStart === ta.selectionEnd) {
+      const pos       = ta.selectionStart;
+      const textBefore = ta.value.slice(0, pos);
+      const lineStart  = textBefore.lastIndexOf('\n') + 1;
+      const currentLine = textBefore.slice(lineStart);
+      if (DEDENT_KW.test(currentLine) && currentLine.match(/^(\s+)/)) {
+        const currentIndent = currentLine.match(/^(\s*)/)[1];
+        const newIndent     = currentIndent.slice(0, Math.max(0, currentIndent.length - 4));
+        e.preventDefault();
+        const newLine = newIndent + currentLine.trimStart() + ':';
+        ta.value = ta.value.slice(0, lineStart) + newLine + ta.value.slice(pos);
+        ta.selectionStart = ta.selectionEnd = lineStart + newLine.length;
+        this._render();
+        this._cbs.forEach(fn => fn());
+        return;
+      }
+    }
+
     // ── Enter: auto-indent ────────────────────────────────────────────────
     if (e.key === 'Enter' && this._autoIndentEnabled) {
       e.preventDefault();
