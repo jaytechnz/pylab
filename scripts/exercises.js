@@ -244,7 +244,7 @@ ex('ops-15','operators','Temperature Converter','medium',
 `Ask for a temperature in Celsius. Convert to Fahrenheit using: <code>F = C × 9/5 + 32</code>. Print the result (no rounding needed).`,
 [t(['0'],['32.0']),t(['100'],['212.0']),t(['37'],['98.6'])],
 ['Store the celsius value as a float or int', 'Apply the formula, then print'],
-'float'),
+'int_or_float'),
 
 ex('ops-16','operators','BMI Calculator','hard',
 `Ask for weight (kg, float) and height (m, float). Calculate BMI: <code>weight / height²</code>. Print the BMI rounded to <strong>1 decimal place</strong>.`,

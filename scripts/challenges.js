@@ -247,18 +247,25 @@ export class ChallengeManager {
 
     // ── Input type convention check ───────────────────────────────────────────
     if (ex.inputType) {
-      const needsInt   = ex.inputType === 'int'   || ex.inputType === 'int_float';
-      const needsFloat = ex.inputType === 'float' || ex.inputType === 'int_float';
       const hasInt     = /\bint\s*\(\s*input\s*\(/.test(source);
       const hasFloat   = /\bfloat\s*\(\s*input\s*\(/.test(source);
 
-      const missing = [];
-      if (needsInt   && !hasInt)   missing.push('int(input(...))');
-      if (needsFloat && !hasFloat) missing.push('float(input(...))');
+      let inputFail = null;
+      if (ex.inputType === 'int_or_float') {
+        if (!hasInt && !hasFloat)
+          inputFail = 'Use int(input(...)) or float(input(...)) when reading numeric input.';
+      } else {
+        const needsInt   = ex.inputType === 'int'   || ex.inputType === 'int_float';
+        const needsFloat = ex.inputType === 'float' || ex.inputType === 'int_float';
+        const missing = [];
+        if (needsInt   && !hasInt)   missing.push('int(input(...))');
+        if (needsFloat && !hasFloat) missing.push('float(input(...))');
+        if (missing.length)
+          inputFail = `Input values must be converted to numbers. Use ${missing.join(' and ')} when reading numeric input.`;
+      }
 
-      if (missing.length) {
-        const msg = `Input values must be converted to numbers. Use ${missing.join(' and ')} when reading numeric input.`;
-        this._renderTestResults([{ pass: false, message: msg }], false);
+      if (inputFail) {
+        this._renderTestResults([{ pass: false, message: inputFail }], false);
         return false;
       }
     }
