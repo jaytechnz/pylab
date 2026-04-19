@@ -357,6 +357,43 @@ x = 5  # inline comment</pre>
         </details>
 
         <details class="ref-section">
+          <summary class="ref-section-title">Strings</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code">name = "Alice"
+print(len(name))          # 5
+print(name.upper())       # "ALICE"
+print(name.lower())       # "alice"
+print(name[0])            # "A"
+print(name[-1])           # "e"
+print(name[1:3])          # "li"  (slice)
+
+# Check contents
+print("li" in name)       # True
+print(name.startswith("Al"))  # True
+print(name.endswith("ce"))    # True
+
+# Check if a character belongs to a set of characters
+grade = "B"
+if grade in "ABC":
+    print("pass")         # pass
+
+# Modify
+print(name.replace("Alice", "Bob"))  # "Bob"
+print("  hello  ".strip())           # "hello"
+print("a,b,c".split(","))            # ['a', 'b', 'c']
+
+# f-strings
+age = 12
+print(f"My name is {name}, I am {age}.")
+
+# Concatenation
+greeting = "Hello, " + name
+print(greeting)           # "Hello, Alice"</pre>
+            <p class="ref-note">Strings are immutable — methods return a new string, they do not change the original.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
           <summary class="ref-section-title">Operators</summary>
           <div class="ref-section-body">
             <p class="ref-label">Arithmetic:</p>
@@ -413,6 +450,12 @@ for i in range(1, 6):
 for i in range(0, 10, 2):
     print(i)       # 0 2 4 6 8</pre>
             <p class="ref-note">Use <code>for</code> when the number of iterations is known.</p>
+            <p class="ref-label">break — exit the loop early:</p>
+            <pre class="ref-code">for i in range(10):
+    if i == 5:
+        break
+    print(i)       # 0 1 2 3 4</pre>
+            <p class="ref-note"><code>break</code> stops the loop immediately. Any code after the loop still runs.</p>
           </div>
         </details>
 
