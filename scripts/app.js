@@ -172,7 +172,7 @@ const runner = new PythonRunner({
       });
     });
   },
-  turtleTarget: turtleFloatCanvas,
+  turtleTarget: turtleFloatCanvas ?? outputTurtle,
 });
 
 // ── Challenges ────────────────────────────────────────────────────────────────
