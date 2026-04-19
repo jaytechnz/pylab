@@ -792,8 +792,8 @@ ex('fn-21','functions','Validate Input','hard',
 'int'),
 
 ex('fn-22','functions','Number Table','hard',
-`Define a function <code>print_table(n)</code> that prints an n×n multiplication table with column headers aligned (use 4-character-wide fields). First row is headers. Call with n=4.`,
+`Define a function <code>print_table(n)</code> that prints an n×n multiplication table with column headers aligned (use 5-character-wide fields). First row is headers. Call with n=4.`,
 [t([],['     1    2    3    4','1    1    2    3    4','2    2    4    6    8','3    3    6    9   12','4    4    8   12   16'])],
-['Use rjust(4) to right-align each number in a 4-character-wide field', 'The first row is the column headers — start with spaces then the numbers']),
+['Use rjust(5) to right-align each number in a 5-character-wide field', 'The header row starts with a single space (blank row label), then each column number rjust(5)']),
 
 ];
