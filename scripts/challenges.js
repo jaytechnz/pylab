@@ -286,7 +286,7 @@ export class ChallengeManager {
       }
 
       // Compare outputs
-      const pass = this._compareOutputs(outputs, tc.expected);
+      const pass = this._compareOutputs(outputs, tc.expected, tc.anyOrder);
       results.push({ pass, expected: tc.expected, got: outputs });
     }
 
@@ -300,7 +300,7 @@ export class ChallengeManager {
     return allPass;
   }
 
-  _compareOutputs(got, expected) {
+  _compareOutputs(got, expected, anyOrder = false) {
     // Strip trailing empty lines from both
     const clean = arr => {
       const a = [...arr];
@@ -318,6 +318,11 @@ export class ChallengeManager {
     const g = clean(got.map(l => normQ(l.trimEnd())));
     const e = clean(expected.map(l => normQ(l.trimEnd())));
     if (g.length !== e.length) return false;
+    if (anyOrder) {
+      const gSorted = [...g].sort();
+      const eSorted = [...e].sort();
+      return gSorted.every((line, i) => line === eSorted[i]);
+    }
     return g.every((line, i) => {
       if (line === e[i]) return true;
       // Accept tiny floating-point rounding differences (e.g. 78.54000000000001 vs 78.54)

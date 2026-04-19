@@ -10,7 +10,7 @@ const XP = { easy: 10, medium: 25, hard: 50 };
 function ex(id, cat, title, diff, desc, tests, hints = [], inputType = '') {
   return { id, category: cat, title, difficulty: diff, xp: XP[diff], description: desc, tests, hints, starterCode: '', inputType };
 }
-function t(inputs, expected) { return { inputs, expected }; }
+function t(inputs, expected, opts = {}) { return { inputs, expected, ...opts }; }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CATEGORY METADATA
@@ -595,7 +595,7 @@ ex('lst-09','lists','Remove by Value','medium',
 
 ex('lst-10','lists','Find Min and Max','medium',
 `Ask the user for 5 integers (one per line). Store in a list. Print the minimum and maximum.`,
-[t(['3','7','1','9','4'],['1','9']),t(['10','10','10','10','10'],['10','10'])],
+[t(['3','7','1','9','4'],['1','9'],{anyOrder:true}),t(['10','10','10','10','10'],['10','10'],{anyOrder:true})],
 ['Append each input to the list (convert to int first)', 'Use the built-in min() and max() functions'],
 'int'),
 
