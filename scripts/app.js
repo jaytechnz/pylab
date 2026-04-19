@@ -483,21 +483,21 @@ async function handleRun() {
   clearOutput();
   setRunning(true);
 
-  // Check if it's an exercise
-  if (challenges.currentExercise) {
-    const allPass = await challenges.runTests(source);
-    // Also run it for the student to see output
-    await runner.run(source);
-    return;
-  }
-
-  // Check for turtle graphics
+  // Check for turtle graphics (applies to both exercises and free programs)
   const hasTurtle = /\bimport\s+turtle\b|\bfrom\s+turtle\b/.test(source);
   if (hasTurtle) {
     if (turtleFloatCanvas) turtleFloatCanvas.innerHTML = '';
     turtleFloat?.classList.remove('hidden');
   } else {
     setOutputTab('console');
+  }
+
+  // Check if it's an exercise
+  if (challenges.currentExercise) {
+    const allPass = await challenges.runTests(source);
+    // Also run it for the student to see output
+    await runner.run(source);
+    return;
   }
 
   runStartTime = Date.now();
