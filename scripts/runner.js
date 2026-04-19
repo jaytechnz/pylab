@@ -5,7 +5,7 @@
 // Skulpt is loaded as a global <script> tag (skulpt.min.js + skulpt-stdlib.js).
 
 const MAX_OUTPUT_LINES = 2000;
-const RUN_TIMEOUT_MS   = 15000;  // 15 s hard cap
+const RUN_TIMEOUT_MS   = 30000;  // 30 s hard cap
 
 // ── Construct detection (for analytics) ──────────────────────────────────────
 export function detectConstructs(source) {
@@ -181,7 +181,7 @@ export class PythonRunner {
         const val = inputQueue.shift() ?? '';
         return Promise.resolve(val);
       },
-      execLimit: 8000,
+      execLimit: 30000,
       __future__: Sk.python3,
     });
 
