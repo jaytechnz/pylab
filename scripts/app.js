@@ -50,6 +50,8 @@ const tabDirty          = $('tab-dirty');
 const outputConsole     = $('output-console');
 const outputTurtle      = $('output-turtle');
 const errorsPanel       = $('output-errors');
+const turtleFloat       = $('turtle-float');
+const turtleFloatCanvas = $('turtle-float-canvas');
 const errorBadge        = $('error-badge');
 const outputTabs        = document.querySelectorAll('.output-tab');
 const clearOutputBtn    = $('btn-clear-output');
@@ -170,7 +172,7 @@ const runner = new PythonRunner({
       });
     });
   },
-  turtleTarget: outputTurtle,
+  turtleTarget: turtleFloatCanvas,
 });
 
 // ── Challenges ────────────────────────────────────────────────────────────────
@@ -492,8 +494,8 @@ async function handleRun() {
   // Check for turtle graphics
   const hasTurtle = /\bimport\s+turtle\b|\bfrom\s+turtle\b/.test(source);
   if (hasTurtle) {
-    setOutputTab('turtle');
-    if (outputTurtle) outputTurtle.innerHTML = '';  // Skulpt will create a fresh canvas
+    if (turtleFloatCanvas) turtleFloatCanvas.innerHTML = '';
+    turtleFloat?.classList.remove('hidden');
   } else {
     setOutputTab('console');
   }
@@ -577,8 +579,9 @@ function clearOutput() {
   if (outputConsole) outputConsole.innerHTML = '<div class="output-placeholder">Program output will appear here…</div>';
   if (errorsPanel) errorsPanel.innerHTML = '<div class="output-placeholder">No problems detected.</div>';
   if (errorBadge) { errorBadge.textContent = '0'; errorBadge.classList.add('hidden'); }
-  // Clear turtle div (Skulpt recreates its canvas on next run)
+  // Clear turtle canvases (Skulpt recreates on next run)
   if (outputTurtle) outputTurtle.innerHTML = '';
+  if (turtleFloatCanvas) turtleFloatCanvas.innerHTML = '';
   _activeInputEl = null;
 }
 
@@ -721,6 +724,39 @@ function toggleRefPanel(force) {
   refPanel?.classList.toggle('ref-panel--open', newOpen);
   localStorage.setItem('pylab_refPanel', newOpen ? 'open' : 'closed');
 }
+
+// Turtle float panel — close & drag
+$('btn-close-turtle-float')?.addEventListener('click', () => {
+  turtleFloat?.classList.add('hidden');
+});
+
+(function initTurtleDrag() {
+  const panel = turtleFloat;
+  const handle = $('turtle-float-drag');
+  if (!panel || !handle) return;
+  let startX, startY, startLeft, startTop;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.id === 'btn-close-turtle-float') return;
+    startX   = e.clientX;
+    startY   = e.clientY;
+    const rect = panel.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop  = rect.top;
+    panel.style.right = 'auto';
+    panel.style.left  = startLeft + 'px';
+    panel.style.top   = startTop  + 'px';
+    function onMove(e) {
+      panel.style.left = (startLeft + e.clientX - startX) + 'px';
+      panel.style.top  = (startTop  + e.clientY - startY) + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+})();
 
 // Explorer
 explorerBtn?.addEventListener('click', () => sidebar?.classList.toggle('sidebar--collapsed'));
