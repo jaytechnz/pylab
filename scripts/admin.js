@@ -2,10 +2,10 @@
 // Superadmin: add/view all teachers and students.
 // Teachers: add/view students in their own classes.
 
-import { createAccount, changePassword } from './auth.js';
+import { createAccount } from './auth.js';
 import { getAllUsers, saveClassName, getClassNames, addClassCodeToTeacher, removeStudentFromClass } from './storage.js';
 import {
-  signInWithEmailAndPassword
+  updatePassword
 } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
 import { auth } from './firebase-config.js';
 
@@ -277,7 +277,8 @@ function _bindAdminEvents(container) {
     if (pw1 !== pw2) { showMsg(msg, 'error', 'Passwords do not match.'); return; }
     showMsg(msg, '', 'Updating…');
     try {
-      await changePassword(pw1);
+      if (!auth.currentUser) throw new Error('Not signed in.');
+      await updatePassword(auth.currentUser, pw1);
       showMsg(msg, 'success', 'Password changed successfully.');
       document.getElementById('change-pw-new').value    = '';
       document.getElementById('change-pw-confirm').value = '';
