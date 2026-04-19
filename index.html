@@ -381,6 +381,8 @@ if grade in "ABC":
 print(name.replace("Alice", "Bob"))  # "Bob"
 print("  hello  ".strip())           # "hello"
 print("a,b,c".split(","))            # ['a', 'b', 'c']
+print("42".rjust(6))                 # "    42"  (right-align in 6-wide field)
+print("42".ljust(6))                 # "42    "  (left-align in 6-wide field)
 
 # f-strings
 age = 12
