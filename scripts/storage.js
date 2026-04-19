@@ -219,6 +219,10 @@ export async function addClassCodeToTeacher(uid, classCode) {
   }
 }
 
+export async function removeStudentFromClass(uid) {
+  await updateDoc(doc(db, 'users', uid), { classCode: '' });
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // QUIZ PROGRESS
 // ══════════════════════════════════════════════════════════════════════════════

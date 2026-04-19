@@ -3,7 +3,7 @@
 // Teachers: add/view students in their own classes.
 
 import { createAccount } from './auth.js';
-import { getAllUsers, saveClassName, getClassNames, addClassCodeToTeacher } from './storage.js';
+import { getAllUsers, saveClassName, getClassNames, addClassCodeToTeacher, removeStudentFromClass } from './storage.js';
 import {
   signInWithEmailAndPassword
 } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
@@ -46,7 +46,7 @@ export async function renderAdmin(containerEl) {
     ${isSuperAdmin ? _buildAddTeacherForm() : ''}
     ${_buildAddStudentForm(classNames, isSuperAdmin, myClassCodes)}
     ${isSuperAdmin ? _buildTeacherList(teachers) : ''}
-    ${_buildStudentList(students, classNames)}
+    ${_buildStudentList(students, classNames, isSuperAdmin)}
     ${_buildClassNamesForm(classNames, myClassCodes, isSuperAdmin)}
   </div>`;
 
@@ -123,21 +123,24 @@ function _buildTeacherList(teachers) {
 
 // ── Student list ──────────────────────────────────────────────────────────────
 
-function _buildStudentList(students, classNames) {
+function _buildStudentList(students, classNames, isSuperAdmin) {
   const rows = students.map(s => `<tr>
     <td>${escHtml(s.displayName ?? '—')}</td>
     <td>${escHtml(s.email ?? '—')}</td>
     <td>${escHtml(classNames[s.classCode] || s.classCode || '—')}</td>
+    ${!isSuperAdmin ? `<td><button class="btn-ghost btn-sm btn-remove-student" data-uid="${escHtml(s.uid)}" data-name="${escHtml(s.displayName ?? '')}">Remove</button></td>` : '<td></td>'}
   </tr>`).join('');
 
+  const colspan = 4;
   return `<div class="admin-section">
     <div class="admin-section-title">Students (${students.length})</div>
     <div class="dash-table-wrap">
       <table class="admin-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Class</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="3" style="color:var(--text-muted)">No students yet.</td></tr>'}</tbody>
+        <thead><tr><th>Name</th><th>Email</th><th>Class</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="${colspan}" style="color:var(--text-muted)">No students yet.</td></tr>`}</tbody>
       </table>
     </div>
+    <div id="remove-student-msg" class="admin-msg hidden"></div>
   </div>`;
 }
 
@@ -223,6 +226,23 @@ function _bindAdminEvents(container) {
     } catch (e) {
       showMsg(msg, 'error', 'Failed to save: ' + e.message);
     }
+  });
+
+  // Remove student from class (teacher only)
+  container.querySelectorAll('.btn-remove-student').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid  = btn.dataset.uid;
+      const name = btn.dataset.name || 'this student';
+      const msg  = document.getElementById('remove-student-msg');
+      if (!confirm(`Remove ${name} from their class? Their account and progress will be kept.`)) return;
+      try {
+        await removeStudentFromClass(uid);
+        showMsg(msg, 'success', `${name} removed from class.`);
+        setTimeout(() => renderAdmin(container.closest('#admin-content') ?? container), 600);
+      } catch (e) {
+        showMsg(msg, 'error', 'Failed: ' + e.message);
+      }
+    });
   });
 
   // Create new class code (teacher only)
