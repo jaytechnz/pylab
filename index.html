@@ -417,6 +417,26 @@ for i in range(0, 10, 2):
         </details>
 
         <details class="ref-section">
+          <summary class="ref-section-title">Iteration — for each loop</summary>
+          <div class="ref-section-body">
+            <pre class="ref-code"># Loop over a list
+fruits = ["apple", "banana", "cherry"]
+for fruit in fruits:
+    print(fruit)   # apple, banana, cherry
+
+# Loop over a string (character by character)
+word = "hello"
+for letter in word:
+    print(letter)  # h, e, l, l, o
+
+# Loop with index using enumerate()
+for i, fruit in enumerate(fruits):
+    print(i, fruit)  # 0 apple, 1 banana, 2 cherry</pre>
+            <p class="ref-note">Use a <strong>for each</strong> loop to go through every item in a list or string without needing a counter.</p>
+          </div>
+        </details>
+
+        <details class="ref-section">
           <summary class="ref-section-title">Iteration — while loop</summary>
           <div class="ref-section-body">
             <pre class="ref-code">count = 1
