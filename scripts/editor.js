@@ -277,6 +277,7 @@ export class Editor {
   _syncScroll() {
     this._hl.scrollTop  = this._ta.scrollTop;
     this._hl.scrollLeft = this._ta.scrollLeft;
+    this._gut.scrollTop = this._ta.scrollTop;
   }
 
   // ── Event binding ─────────────────────────────────────────────────────────
