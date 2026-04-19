@@ -359,8 +359,8 @@ ex('sel-13','selection','Number in Range','medium',
 'int'),
 
 ex('sel-14','selection','Ticket Price','medium',
-`Ask for age (int). Calculate ticket price:<br>- Under 5: Free (<code>0</code>)<br>- 5-12: £5<br>- 13-17: £8<br>- 18-64: £12<br>- 65+: £6<br>Print: <code>Ticket price: £&lt;price&gt;</code>`,
-[t(['4'],['Ticket price: £0']),t(['10'],['Ticket price: £5']),t(['15'],['Ticket price: £8']),t(['30'],['Ticket price: £12']),t(['70'],['Ticket price: £6'])],
+`Ask for age (int). Calculate ticket price:<br>- Under 5: Free (<code>0</code>)<br>- 5-12: $5<br>- 13-17: $8<br>- 18-64: $12<br>- 65+: $6<br>Print: <code>Ticket price: $&lt;price&gt;</code>`,
+[t(['4'],['Ticket price: $0']),t(['10'],['Ticket price: $5']),t(['15'],['Ticket price: $8']),t(['30'],['Ticket price: $12']),t(['70'],['Ticket price: $6'])],
 ['Five branches with if/elif/elif/elif/else', 'Check in order from youngest'],
 'int'),
 
@@ -383,8 +383,8 @@ ex('sel-17','selection','Fizz Buzz (Single)','hard',
 'int'),
 
 ex('sel-18','selection','Shipping Cost','hard',
-`Ask for weight in kg (float). Calculate shipping cost:<br>- ≤1 kg: £3.50<br>- ≤5 kg: £5.00<br>- ≤20 kg: £8.50<br>- >20 kg: £15.00<br>Print: <code>Shipping cost: £&lt;cost&gt;</code>`,
-[t(['0.5'],['Shipping cost: £3.5']),t(['3'],['Shipping cost: £5.0']),t(['15'],['Shipping cost: £8.5']),t(['25'],['Shipping cost: £15.0'])],
+`Ask for weight in kg (float). Calculate shipping cost:<br>- ≤1 kg: $3.50<br>- ≤5 kg: $5.00<br>- ≤20 kg: $8.50<br>- >20 kg: $15.00<br>Print: <code>Shipping cost: $&lt;cost&gt;</code>`,
+[t(['0.5'],['Shipping cost: $3.5']),t(['3'],['Shipping cost: $5.0']),t(['15'],['Shipping cost: $8.5']),t(['25'],['Shipping cost: $15.0'])],
 ['Four price tiers — use if/elif/elif/else', 'Check lightest first'],
 'float'),
 
