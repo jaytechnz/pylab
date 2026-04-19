@@ -2,7 +2,7 @@
 // Superadmin: add/view all teachers and students.
 // Teachers: add/view students in their own classes.
 
-import { createAccount } from './auth.js';
+import { createAccount, changePassword } from './auth.js';
 import { getAllUsers, saveClassName, getClassNames, addClassCodeToTeacher, removeStudentFromClass } from './storage.js';
 import {
   signInWithEmailAndPassword
@@ -48,6 +48,7 @@ export async function renderAdmin(containerEl) {
     ${isSuperAdmin ? _buildTeacherList(teachers) : ''}
     ${_buildStudentList(students, classNames, isSuperAdmin)}
     ${_buildClassNamesForm(classNames, myClassCodes, isSuperAdmin)}
+    ${!isSuperAdmin ? _buildChangePasswordForm() : ''}
   </div>`;
 
   _bindAdminEvents(containerEl);
@@ -94,7 +95,9 @@ function _buildAddStudentForm(classNames, isSuperAdmin, myClassCodes) {
         : myClassCodes.length > 1
           ? `<select id="new-student-class">${classOptions}</select>`
           : `<input type="text" id="new-student-class" placeholder="Class code (e.g. CS9A-2026)" value="${defaultCode}" autocomplete="off">`}
-      <input type="text"  id="new-student-pw"    placeholder="Temporary password (min 8 chars)" autocomplete="new-password">
+      ${isSuperAdmin
+        ? `<input type="text" id="new-student-pw" placeholder="Temporary password (min 8 chars)" autocomplete="new-password">`
+        : `<p style="font-size:0.78rem;color:var(--text-muted);margin:0.25rem 0">Student's password will be set to their class code.</p>`}
       <div id="add-student-msg" class="admin-msg hidden"></div>
       <button class="btn-primary" id="btn-add-student">Add Student</button>
     </div>
@@ -175,6 +178,23 @@ function _buildClassNamesForm(classNames, classCodes, isSuperAdmin) {
   </div>`;
 }
 
+// ── Change password form (teacher only) ──────────────────────────────────────
+
+function _buildChangePasswordForm() {
+  return `<div class="admin-section">
+    <div class="admin-section-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Change Password
+    </div>
+    <div class="admin-form" id="change-pw-form">
+      <input type="text" class="pw-masked" id="change-pw-new"    placeholder="New password (min 8 chars)" autocomplete="new-password">
+      <input type="text" class="pw-masked" id="change-pw-confirm" placeholder="Confirm new password" autocomplete="new-password">
+      <div id="change-pw-msg" class="admin-msg hidden"></div>
+      <button class="btn-primary" id="btn-change-pw">Change Password</button>
+    </div>
+  </div>`;
+}
+
 // ── Event binding ─────────────────────────────────────────────────────────────
 
 function _bindAdminEvents(container) {
@@ -199,18 +219,21 @@ function _bindAdminEvents(container) {
 
   // Add student
   container.querySelector('#btn-add-student')?.addEventListener('click', async () => {
+    const isSA  = _adminProfile?.role === 'superadmin';
     const name  = document.getElementById('new-student-name')?.value.trim();
     const email = document.getElementById('new-student-email')?.value.trim();
     const cls   = document.getElementById('new-student-class')?.value?.trim?.();
-    const pw    = document.getElementById('new-student-pw')?.value;
+    const pwEl  = document.getElementById('new-student-pw');
+    const pw    = isSA ? pwEl?.value : cls;  // teachers: class code is the password
     const msg   = document.getElementById('add-student-msg');
-    if (!name || !email || !pw) { showMsg(msg, 'error', 'All fields required.'); return; }
-    if (pw.length < 8) { showMsg(msg, 'error', 'Password must be at least 8 characters.'); return; }
+    if (!name || !email) { showMsg(msg, 'error', 'Name and email required.'); return; }
+    if (!cls) { showMsg(msg, 'error', 'Class code required.'); return; }
+    if (!pw || pw.length < 6) { showMsg(msg, 'error', isSA ? 'Password must be at least 8 characters.' : 'Class code must be at least 6 characters.'); return; }
 
     showMsg(msg, '', 'Creating account…');
     try {
       await _createAndRestoreSession(email, pw, name, cls, 'student');
-      showMsg(msg, 'success', `Student account created for ${email}. Temp password: ${pw}`);
+      showMsg(msg, 'success', `Student account created for ${email}. Login password: ${pw}`);
     } catch (e) {
       showMsg(msg, 'error', e.message ?? 'Failed to create account.');
     }
@@ -243,6 +266,24 @@ function _bindAdminEvents(container) {
         showMsg(msg, 'error', 'Failed: ' + e.message);
       }
     });
+  });
+
+  // Change password (teacher only)
+  container.querySelector('#btn-change-pw')?.addEventListener('click', async () => {
+    const pw1 = document.getElementById('change-pw-new')?.value;
+    const pw2 = document.getElementById('change-pw-confirm')?.value;
+    const msg = document.getElementById('change-pw-msg');
+    if (!pw1 || pw1.length < 8) { showMsg(msg, 'error', 'Password must be at least 8 characters.'); return; }
+    if (pw1 !== pw2) { showMsg(msg, 'error', 'Passwords do not match.'); return; }
+    showMsg(msg, '', 'Updating…');
+    try {
+      await changePassword(pw1);
+      showMsg(msg, 'success', 'Password changed successfully.');
+      document.getElementById('change-pw-new').value    = '';
+      document.getElementById('change-pw-confirm').value = '';
+    } catch (e) {
+      showMsg(msg, 'error', e.message ?? 'Failed to change password.');
+    }
   });
 
   // Create new class code (teacher only)
