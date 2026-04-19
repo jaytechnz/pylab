@@ -210,6 +210,15 @@ export async function saveClassName(classCode, name) {
   await setDoc(doc(db, 'class_names', classCode), { name });
 }
 
+export async function addClassCodeToTeacher(uid, classCode) {
+  const ref  = doc(db, 'users', uid);
+  const snap = await getDoc(ref);
+  const existing = snap.data()?.classCodes ?? [];
+  if (!existing.includes(classCode)) {
+    await updateDoc(ref, { classCodes: [...existing, classCode] });
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // QUIZ PROGRESS
 // ══════════════════════════════════════════════════════════════════════════════

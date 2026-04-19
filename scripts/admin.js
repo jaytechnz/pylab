@@ -3,7 +3,7 @@
 // Teachers: add/view students in their own classes.
 
 import { createAccount } from './auth.js';
-import { getAllUsers, saveClassName, getClassNames } from './storage.js';
+import { getAllUsers, saveClassName, getClassNames, addClassCodeToTeacher } from './storage.js';
 import {
   signInWithEmailAndPassword
 } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
@@ -32,7 +32,10 @@ export async function renderAdmin(containerEl) {
   const isSuperAdmin = _adminProfile?.role === 'superadmin';
   const myClassCodes = isSuperAdmin
     ? [...new Set(users.filter(u => u.role === 'student').map(u => u.classCode).filter(Boolean))]
-    : [_adminProfile?.classCode].filter(Boolean);
+    : [...new Set([
+        ...(_adminProfile?.classCodes ?? []),
+        _adminProfile?.classCode
+      ].filter(Boolean))];
 
   const teachers = users.filter(u => u.role === 'teacher' || u.role === 'superadmin');
   const students = isSuperAdmin
@@ -44,7 +47,7 @@ export async function renderAdmin(containerEl) {
     ${_buildAddStudentForm(classNames, isSuperAdmin, myClassCodes)}
     ${isSuperAdmin ? _buildTeacherList(teachers) : ''}
     ${_buildStudentList(students, classNames)}
-    ${_buildClassNamesForm(classNames, myClassCodes)}
+    ${_buildClassNamesForm(classNames, myClassCodes, isSuperAdmin)}
   </div>`;
 
   _bindAdminEvents(containerEl);
@@ -76,6 +79,8 @@ function _buildAddStudentForm(classNames, isSuperAdmin, myClassCodes) {
     `<option value="${escHtml(cc)}">${escHtml(classNames[cc] || cc)}</option>`
   ).join('');
 
+  const defaultCode = escHtml(myClassCodes[0] ?? '');
+
   return `<div class="admin-section">
     <div class="admin-section-title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
@@ -86,7 +91,9 @@ function _buildAddStudentForm(classNames, isSuperAdmin, myClassCodes) {
       <input type="email" id="new-student-email" placeholder="name@student.cga.school" autocomplete="off">
       ${isSuperAdmin
         ? `<input type="text" id="new-student-class" placeholder="Class code (e.g. CS9A-2026)" autocomplete="off">`
-        : `<select id="new-student-class">${classOptions}</select>`}
+        : myClassCodes.length > 1
+          ? `<select id="new-student-class">${classOptions}</select>`
+          : `<input type="text" id="new-student-class" placeholder="Class code (e.g. CS9A-2026)" value="${defaultCode}" autocomplete="off">`}
       <input type="text"  id="new-student-pw"    placeholder="Temporary password (min 8 chars)" autocomplete="new-password">
       <div id="add-student-msg" class="admin-msg hidden"></div>
       <button class="btn-primary" id="btn-add-student">Add Student</button>
@@ -136,7 +143,7 @@ function _buildStudentList(students, classNames) {
 
 // ── Class names form ──────────────────────────────────────────────────────────
 
-function _buildClassNamesForm(classNames, classCodes) {
+function _buildClassNamesForm(classNames, classCodes, isSuperAdmin) {
   const fields = classCodes.map(cc => `
     <div style="display:flex;gap:0.5rem;align-items:center">
       <span style="font-size:0.78rem;color:var(--text-muted);width:110px;flex-shrink:0">${escHtml(cc)}</span>
@@ -144,12 +151,23 @@ function _buildClassNamesForm(classNames, classCodes) {
              value="${escHtml(classNames[cc] || '')}" placeholder="Friendly name (e.g. Year 9A)">
     </div>`).join('');
 
+  const newCodeSection = !isSuperAdmin ? `
+    <hr style="border:none;border-top:1px solid var(--border);margin:0.75rem 0">
+    <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.4rem">Create new class code:</p>
+    <div style="display:flex;gap:0.5rem">
+      <input type="text" id="new-class-code"  placeholder="Code (e.g. CS9B-2026)" autocomplete="off" style="flex:1">
+      <input type="text" id="new-class-label" placeholder="Friendly name (e.g. Year 9B)" autocomplete="off" style="flex:1.5">
+    </div>
+    <button class="btn-secondary" id="btn-create-class-code" style="margin-top:0.4rem">Create Class Code</button>
+    <div id="new-class-msg" class="admin-msg hidden"></div>` : '';
+
   return `<div class="admin-section">
     <div class="admin-section-title">Class Names</div>
     <div class="admin-form" id="class-names-form">
-      ${fields || '<p style="color:var(--text-muted);font-size:0.8rem">No classes created yet.</p>'}
+      ${fields || '<p style="color:var(--text-muted);font-size:0.8rem">No classes yet.</p>'}
       <div id="class-names-msg" class="admin-msg hidden"></div>
       ${classCodes.length ? '<button class="btn-primary" id="btn-save-class-names">Save Names</button>' : ''}
+      ${newCodeSection}
     </div>
   </div>`;
 }
@@ -204,6 +222,27 @@ function _bindAdminEvents(container) {
       showMsg(msg, 'success', 'Class names saved.');
     } catch (e) {
       showMsg(msg, 'error', 'Failed to save: ' + e.message);
+    }
+  });
+
+  // Create new class code (teacher only)
+  container.querySelector('#btn-create-class-code')?.addEventListener('click', async () => {
+    const codeEl  = document.getElementById('new-class-code');
+    const labelEl = document.getElementById('new-class-label');
+    const msg     = document.getElementById('new-class-msg');
+    const code    = codeEl?.value.trim().toUpperCase();
+    const label   = labelEl?.value.trim();
+    if (!code) { showMsg(msg, 'error', 'Class code is required.'); return; }
+    try {
+      await saveClassName(code, label);
+      if (_adminUser?.uid) await addClassCodeToTeacher(_adminUser.uid, code);
+      showMsg(msg, 'success', `Class code ${code} created.`);
+      codeEl.value  = '';
+      labelEl.value = '';
+      // Refresh panel
+      setTimeout(() => renderAdmin(container.closest('#admin-content') ?? container), 300);
+    } catch (e) {
+      showMsg(msg, 'error', 'Failed: ' + e.message);
     }
   });
 }
