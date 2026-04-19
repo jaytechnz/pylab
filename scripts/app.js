@@ -541,19 +541,35 @@ function appendOutput(text, type = 'stdout') {
   const el = outputConsole;
   if (!el) return;
 
-  // Remove placeholder
   el.querySelector('.output-placeholder')?.remove();
 
-  // Strip trailing newline then split — avoids empty trailing block span
-  const lines = text.replace(/\n$/, '').split('\n');
-  lines.forEach(line => {
+  // Split on newlines. Each \n ends a line (marks the span complete).
+  // Text with no trailing \n continues the current span (supports end="", end=" ", etc.)
+  const segments = text.split('\n');
+
+  segments.forEach((segment, i) => {
+    const isLast = i === segments.length - 1;
+
+    // Empty trailing segment from a \n-terminated string — nothing to add
+    if (isLast && segment === '') return;
+
+    if (i === 0) {
+      // If the previous span is still open (no \n yet), append to it
+      const last = el.lastElementChild;
+      if (last?.classList.contains('output-line') && !last.dataset.complete) {
+        last.textContent += segment;
+        if (!isLast) last.dataset.complete = '1';
+        return;
+      }
+    }
+
     const s = document.createElement('span');
     s.className = `output-line out-${type}`;
-    s.textContent = line;
+    s.textContent = segment;
+    if (!isLast) s.dataset.complete = '1';
     el.appendChild(s);
   });
 
-  // Auto-scroll
   el.scrollTop = el.scrollHeight;
 }
 
