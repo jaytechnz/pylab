@@ -23,6 +23,7 @@ export const CATEGORIES = [
   { id: 'iteration',  label: 'Iteration (Loops)',       icon: '🔁', count: 22 },
   { id: 'lists',      label: 'Lists',                   icon: '📋', count: 22 },
   { id: 'functions',  label: 'Functions (def)',          icon: '⚙️', count: 22 },
+  { id: 'turtle',     label: 'Turtle Graphics',          icon: '🐢', count: 10 },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -795,5 +796,59 @@ ex('fn-22','functions','Number Table','hard',
 `Define a function <code>print_table(n)</code> that prints an n×n multiplication table with column headers aligned (use 5-character-wide fields). First row is headers. Call with n=4.`,
 [t([],['     1    2    3    4','1    1    2    3    4','2    2    4    6    8','3    3    6    9   12','4    4    8   12   16'])],
 ['Use rjust(5) to right-align each number in a 5-character-wide field', 'The header row starts with a single space (blank row label), then each column number rjust(5)']),
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TURTLE GRAPHICS  (10)
+// ══════════════════════════════════════════════════════════════════════════════
+
+ex('trt-01','turtle','Draw a Square','easy',
+`Use turtle to draw a square with sides of 100 pixels.`,
+[],
+['Move forward 100 pixels, then turn right 90°', 'Repeat this 4 times using a for loop']),
+
+ex('trt-02','turtle','Draw a Triangle','easy',
+`Use turtle to draw an equilateral triangle with sides of 100 pixels.`,
+[],
+['An equilateral triangle has 3 equal sides and 3 equal angles', 'Turn right by 120° after each side']),
+
+ex('trt-03','turtle','Draw a Polygon','easy',
+`Ask the user for the number of sides (integer). Draw a regular polygon with sides of 80 pixels.`,
+[],
+['The exterior angle of a regular polygon is 360 ÷ number of sides', 'Use a for loop to draw each side']),
+
+ex('trt-04','turtle','Coloured Square','easy',
+`Draw a filled square (side 100). Fill colour: blue. Pen colour: black.`,
+[],
+['Use t.fillcolor() to set the fill colour', 'Call t.begin_fill() before drawing and t.end_fill() after']),
+
+ex('trt-05','turtle','Spiral','medium',
+`Draw a square spiral. Start with a side length of 10 and increase by 5 each time. Stop after 20 sides.`,
+[],
+['Use a loop — each iteration draws one side and turns', 'Increase the side length variable by 5 each iteration']),
+
+ex('trt-06','turtle','Draw a Star','medium',
+`Use turtle to draw a 5-pointed star with sides of 100 pixels.`,
+[],
+['A 5-pointed star uses 5 sides', 'Turn right by 144° after each side']),
+
+ex('trt-07','turtle','Concentric Circles','medium',
+`Draw 5 concentric circles (same centre). Radii: 20, 40, 60, 80, 100.`,
+[],
+['Use a loop with radius values 20, 40, 60, 80, 100', 'Use t.penup() to reposition before each circle — place the turtle at (0, -radius) so circles share the same centre']),
+
+ex('trt-08','turtle','Rainbow Hexagon','medium',
+`Draw a regular hexagon. Each side should be a different colour: red, orange, yellow, green, blue, purple.`,
+[],
+['Store the colours in a list and loop through them', 'Set the pen colour before drawing each side']),
+
+ex('trt-09','turtle','Draw a House','hard',
+`Draw a house shape: a square base (side 100) with a triangular roof on top.`,
+[],
+['Draw the square first, then position the turtle at the top-left corner of the square', 'The roof is a triangle — turn 60° for an equilateral triangle roof']),
+
+ex('trt-10','turtle','Flower Pattern','hard',
+`Draw a flower with 12 petals. Each petal is a circle of radius 40. Rotate 30° between petals.`,
+[],
+['Draw a circle, then turn right 30° — repeat 12 times', 'Use t.circle(40) to draw each petal']),
 
 ];

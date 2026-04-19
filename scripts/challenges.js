@@ -243,6 +243,13 @@ export class ChallengeManager {
     this.progress.attempts[ex.id] = (this.progress.attempts[ex.id] ?? 0) + 1;
     this.progress.lastRunAt = Date.now();
 
+    // ── Turtle exercises: no automated tests — mark complete on run ───────────
+    if (ex.category === 'turtle') {
+      await this._markComplete(ex);
+      this.testResults.innerHTML = `<div class="ch-success-banner">✓ Turtle exercise complete! Check the Turtle tab for your drawing.</div>`;
+      return true;
+    }
+
     this.testResults.innerHTML = '<div class="ch-test-header">Running tests…</div>';
 
     // ── Input type convention check ───────────────────────────────────────────
