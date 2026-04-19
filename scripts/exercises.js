@@ -670,7 +670,12 @@ ex('lst-21','lists','Flatten Two Lists','hard',
 ['Use + to concatenate the two lists', 'Call sort() to sort the combined list']),
 
 ex('lst-22','lists','Inventory System','hard',
-`Build a simple inventory. Start with <code>inventory = ["sword", "shield", "potion"]</code>.<br>Ask for 3 commands (one per input): <code>add &lt;item&gt;</code>, <code>remove &lt;item&gt;</code>, or <code>list</code>.<br>After all commands, print the final inventory list.`,
+`Start with <code>inventory = ["sword", "shield", "potion"]</code>. Ask the user for 3 commands (one per input).<br>Each command is one of:<br>
+<ul style="margin:0.25rem 0 0 1rem">
+  <li><code>add &lt;item&gt;</code> — add the item to the inventory</li>
+  <li><code>remove &lt;item&gt;</code> — remove the item from the inventory</li>
+  <li><code>list</code> — print the inventory as it is right now</li>
+</ul>`,
 [t(['add axe','remove potion','list'],["['sword', 'shield', 'axe']"]),
  t(['list','add helmet','list'],["['sword', 'shield', 'potion']","['sword', 'shield', 'potion', 'helmet']"])],
 ['Use split() to break each command into parts', 'The first part is the action (add/remove/list), the second is the item name']),
