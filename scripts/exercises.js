@@ -389,8 +389,8 @@ ex('sel-18','selection','Shipping Cost','hard',
 'float'),
 
 ex('sel-19','selection','Password Strength','hard',
-`Ask for a password. Print its strength (checked in this order):<br>- <code>Weak</code> if length &lt; 6<br>- <code>Strong</code> if length ≥ 12, or length ≥ 8 AND has a digit<br>- <code>Medium</code> if length 6–7 AND has a digit<br>- Otherwise <code>Medium</code>`,
-[t(['abc'],['Weak']),t(['hello1'],['Medium']),t(['securepass1'],['Strong']),t(['password'],['Medium'])],
+`Ask for a password. Print its strength (checked in this order):<br>- <code>Weak</code> if length &lt; 6<br>- <code>Strong</code> if length ≥ 8 AND has a digit<br>- <code>Medium</code> if length ≥ 6 AND has a digit<br>- Otherwise <code>Medium</code>`,
+[t(['abc'],['Weak']),t(['hello1'],['Medium']),t(['securepass1'],['Strong']),t(['password'],['Medium']),t(['abcdefghijkl'],['Medium'])],
 ['Use len() to check the password length', 'Use a loop to check whether any character is a digit']),
 
 ex('sel-20','selection','Nested IF: Cinema','hard',
