@@ -41,6 +41,7 @@ const saveStatus        = $('save-status');
 const editorTextarea    = $('code-editor');
 const editorHighlight   = $('editor-highlight');
 const editorGutter      = $('editor-gutter');
+const editorInner       = $('editor-inner');
 const programTitleEl    = $('program-title-display');
 const editorTabEl       = $('active-tab');
 const tabFilename       = $('tab-filename');
@@ -119,7 +120,8 @@ let _allPrograms     = [];  // cache for search
 const editor = new Editor({
   textarea:  editorTextarea,
   highlight: editorHighlight,
-  gutter:    editorGutter
+  gutter:    editorGutter,
+  inner:     editorInner
 });
 
 // ── Python Runner ─────────────────────────────────────────────────────────────

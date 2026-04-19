@@ -225,10 +225,11 @@ export function getBackspaceDelete(source, cursorPos) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export class Editor {
-  constructor({ textarea, highlight, gutter }) {
-    this._ta   = textarea;
-    this._hl   = highlight;
-    this._gut  = gutter;
+  constructor({ textarea, highlight, gutter, inner }) {
+    this._ta    = textarea;
+    this._hl    = highlight;
+    this._gut   = gutter;
+    this._inner = inner;
     this._cbs  = [];          // onChange callbacks
     this._autoIndentEnabled = true;
     this._snakeCaseEnabled  = true;
@@ -260,8 +261,15 @@ export class Editor {
 
   _render() {
     this._hl.innerHTML = highlightSource(this._ta.value);
-    this._syncScroll();
+    this._resizeTextarea();
     this._updateGutter();
+  }
+
+  _resizeTextarea() {
+    // Auto-size the textarea to exactly fit its content so editor-inner
+    // is the sole scroll container (no competing textarea scrollbar in Safari).
+    this._ta.style.height = 'auto';
+    this._ta.style.height = this._ta.scrollHeight + 'px';
   }
 
   _updateGutter() {
@@ -275,9 +283,9 @@ export class Editor {
   }
 
   _syncScroll() {
-    this._hl.scrollTop  = this._ta.scrollTop;
-    this._hl.scrollLeft = this._ta.scrollLeft;
-    this._gut.scrollTop = this._ta.scrollTop;
+    // editor-inner is the scroll container; sync gutter to match.
+    // Highlight is a child of editor-inner so it scrolls automatically.
+    this._gut.scrollTop = this._inner.scrollTop;
   }
 
   // ── Event binding ─────────────────────────────────────────────────────────
@@ -290,12 +298,13 @@ export class Editor {
       this._cbs.forEach(fn => fn());
     });
 
-    ta.addEventListener('scroll', () => this._syncScroll());
-
     ta.addEventListener('keydown', e => this._handleKeyDown(e));
 
-    // Sync scroll when window resizes
-    window.addEventListener('resize', () => this._syncScroll(), { passive: true });
+    // Sync gutter when editor-inner scrolls
+    this._inner.addEventListener('scroll', () => this._syncScroll(), { passive: true });
+
+    // Re-render on resize so textarea height recalculates
+    window.addEventListener('resize', () => this._render(), { passive: true });
   }
 
   _handleKeyDown(e) {
