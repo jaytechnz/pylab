@@ -273,7 +273,7 @@ ex('ops-19','operators','Hypotenuse','hard',
 'float'),
 
 ex('ops-20','operators','Speed, Distance, Time','hard',
-`Ask for distance (km, float) and time (hours, float). Calculate:<br>1. Speed = distance / time (print rounded to 2dp)<br>2. Is the speed over 100? Print <code>True</code> or <code>False</code>.`,
+`Ask for distance (km, float) and time (hours, float). Calculate speed = distance / time. Print:<br>1. The speed rounded to 2 decimal places<br>2. Whether the speed is over 100 (<code>True</code> or <code>False</code>)`,
 [t(['200','2'],['100.0','False']),t(['300','2.5'],['120.0','True'])],
 ['speed = distance / time', 'print(speed > 100)'],
 'float'),
