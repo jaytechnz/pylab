@@ -705,8 +705,8 @@ ex('fn-04','functions','Square a Number','easy',
 ['Use ** to square the value and return it']),
 
 ex('fn-05','functions','Print Header','easy',
-`Define a void function <code>print_header()</code> that prints:<br><code>====================</code><br><code>    CGA PyLab      </code><br><code>====================</code><br>Call it once.`,
-[t([],['====================','    CGA PyLab      ','===================='])],
+`Define a void function <code>print_header()</code> that prints:<br><code>====================</code><br><code>CGA PyLab</code><br><code>====================</code><br>Call it once.`,
+[t([],['====================','CGA PyLab','===================='])],
 ['A void function has no return statement (or return None)', 'Use print() inside the function']),
 
 ex('fn-06','functions','Is Even','easy',
