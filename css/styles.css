@@ -630,6 +630,37 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 .prog-feedback-badge--reviewed { background: rgba(34,197,94,0.18); color: var(--accent); }
 .prog-feedback-badge--pending  { background: rgba(245,158,11,0.18); color: var(--warning); }
 
+.feedback-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  background: rgba(34,197,94,0.08);
+  border-bottom: 1px solid rgba(34,197,94,0.2);
+  font-size: 0.82rem;
+}
+.feedback-panel.hidden { display: none; }
+.feedback-panel-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.feedback-panel-mark {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+.feedback-panel-label {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.feedback-panel-comment {
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
 .icon-btn {
   background: none;
   border: none;
