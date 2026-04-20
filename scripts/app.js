@@ -10,7 +10,8 @@ import { QuizManager }                   from './quiz.js';
 import { initSuggestions, teardownSuggestions, setupSuggestionsUI } from './suggestions.js';
 import {
   saveNewProgram, updateProgram, loadProgram,
-  listPrograms, deleteProgram, renameProgram, saveSession
+  listPrograms, deleteProgram, renameProgram, saveSession,
+  submitProgram, getStudentSubmissions
 } from './storage.js';
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ const fileInputPy       = $('file-input-py');
 const runBtn            = $('btn-run');
 const stopBtn           = $('btn-stop');
 const saveBtn           = $('btn-save');
+const submitReviewBtn   = $('btn-submit-review');
 const saveStatus        = $('save-status');
 
 const editorTextarea    = $('code-editor');
@@ -116,6 +118,7 @@ let isDirty          = false;
 let isRunning        = false;
 let runStartTime     = 0;
 let _allPrograms     = [];  // cache for search
+let _mySubmissions   = {};  // programId → submission data (students only)
 
 // ── Editor ────────────────────────────────────────────────────────────────────
 
@@ -233,6 +236,13 @@ onAuth(async (user, profile) => {
   quiz.init(user.uid);
 
   await refreshProgramList();
+  if (isStudent) {
+    getStudentSubmissions(user.uid).then(subs => {
+      _mySubmissions = {};
+      subs.forEach(s => { _mySubmissions[s.programId] = s; });
+      renderProgramList(_allPrograms);
+    }).catch(() => {});
+  }
   newProgram();
   await challenges.init(user.uid, profile?.classCode ?? '', profile?.displayName ?? user.email, profile?.role ?? 'student');
 });
@@ -314,14 +324,21 @@ function renderProgramList(programs) {
     programList.innerHTML = '<div class="program-list-empty">No saved programs yet.<br>Click <strong>+ New</strong> to start.</div>';
     return;
   }
-  programList.innerHTML = programs.map(p => `
-    <div class="program-item ${p.id === currentProgramId ? 'active' : ''}" data-id="${p.id}">
-      <span class="program-item-name">${escHtml(p.title)}</span>
+  programList.innerHTML = programs.map(p => {
+    const sub = _mySubmissions[p.id];
+    const badge = sub?.status === 'reviewed'
+      ? `<span class="prog-feedback-badge prog-feedback-badge--reviewed" title="${escHtml(sub.feedback || 'Feedback received')}">${sub.mark !== null && sub.mark !== undefined ? sub.mark + '%' : '✓'}</span>`
+      : sub?.status === 'pending'
+      ? `<span class="prog-feedback-badge prog-feedback-badge--pending" title="Awaiting teacher feedback">…</span>`
+      : '';
+    return `<div class="program-item ${p.id === currentProgramId ? 'active' : ''}" data-id="${p.id}">
+      <span class="program-item-name">${escHtml(p.title)}</span>${badge}
       <span class="program-item-actions">
         <button class="prog-rename icon-btn" data-id="${p.id}" title="Rename">✎</button>
         <button class="prog-delete icon-btn" data-id="${p.id}" title="Delete">✕</button>
       </span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   programList.querySelectorAll('.program-item').forEach(el => {
     el.addEventListener('click', async e => {
@@ -396,6 +413,37 @@ newProgramBtn?.addEventListener('click', () => {
 });
 
 saveBtn?.addEventListener('click', () => saveProgram());
+
+submitReviewBtn?.addEventListener('click', async () => {
+  if (!currentUser || !currentProgramId) {
+    alert('Save your program first, then submit for review.');
+    return;
+  }
+  const label = submitReviewBtn.querySelector('.btn-label') ?? submitReviewBtn;
+  submitReviewBtn.disabled = true;
+  const origText = submitReviewBtn.textContent;
+  submitReviewBtn.textContent = 'Submitting…';
+  try {
+    const subId = await submitProgram(
+      currentUser.uid, currentProgramId, currentTitle,
+      editor.getValue(),
+      currentProfile?.classCode ?? '',
+      currentProfile?.displayName ?? currentUser.email
+    );
+    _mySubmissions[currentProgramId] = {
+      ..._mySubmissions[currentProgramId],
+      id: subId, programId: currentProgramId,
+      status: _mySubmissions[currentProgramId]?.status === 'reviewed' ? 'reviewed' : 'pending'
+    };
+    renderProgramList(_allPrograms);
+    submitReviewBtn.textContent = '✓ Submitted';
+    setTimeout(() => { submitReviewBtn.disabled = false; submitReviewBtn.textContent = origText; }, 2500);
+  } catch (e) {
+    alert('Failed to submit: ' + e.message);
+    submitReviewBtn.disabled = false;
+    submitReviewBtn.textContent = origText;
+  }
+});
 
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {

@@ -5,7 +5,9 @@ import {
   getAllChallengeProgress, getAllTeacherFeedback, saveTeacherFeedback,
   getClassNames, saveClassName,
   saveChallengeProgress, updateLeaderboard,
-  getAllQuizProgress
+  getAllQuizProgress,
+  getClassProgramSubmissions, getAllProgramSubmissions,
+  upsertProgramReview, listPrograms
 } from './storage.js';
 import { EXERCISES, CATEGORIES } from './exercises.js';
 import { QUIZ_QUESTIONS }         from './quiz-data.js';
@@ -14,20 +16,26 @@ import { PythonRunner }           from './runner.js';
 
 const TOTAL_EXERCISES = EXERCISES.length;  // 130
 
-let _students     = null;
-let _sessions     = null;
-let _allProgress  = null;
-let _allQuizProg  = null;
-let _feedback     = null;
-let _classNames   = {};
-let _containerEl  = null;
-let _role         = '';
+let _students            = null;
+let _sessions            = null;
+let _allProgress         = null;
+let _allQuizProg         = null;
+let _feedback            = null;
+let _classNames          = {};
+let _containerEl         = null;
+let _role                = '';
+let _programSubmissions  = null;
+let _myClassCodes        = [];
 
 let _teacherUid = null;
 
 export function initDashboard(user, profile) {
-  _role       = profile?.role ?? '';
-  _teacherUid = user?.uid ?? null;
+  _role         = profile?.role ?? '';
+  _teacherUid   = user?.uid ?? null;
+  _myClassCodes = [...new Set([
+    ...( profile?.classCodes ?? []),
+    profile?.classCode
+  ].filter(Boolean))];
 }
 
 // Demo mode — swaps live Firestore data with generated fake data
@@ -49,6 +57,10 @@ export async function renderDashboard(containerEl) {
       getClassNames().catch(() => ({})),
       getAllQuizProgress().catch(() => ({}))
     ]);
+    _programSubmissions = await (_role === 'superadmin'
+      ? getAllProgramSubmissions()
+      : getClassProgramSubmissions(_myClassCodes)
+    ).catch(() => []);
   } catch (e) {
     containerEl.innerHTML = `<p class="dash-error">Failed to load dashboard: ${escHtml(e.message)}</p>`;
     return;
@@ -158,9 +170,14 @@ function _render(container, selectedClass) {
     ${_buildCohortCard(students)}
     ${_buildQuizOverviewCard(students)}
     ${_buildStudentTable(students)}
+    ${_buildProgramReviewsCard(students)}
     ${_buildHardestExercisesCard(students)}
     ${_buildContentQualityCard(students)}
   `;
+
+  // Program reviews card
+  const progReviewsCard = grid.querySelector('#prog-reviews-card');
+  if (progReviewsCard) _bindProgramReviewsEvents(progReviewsCard, students);
 
   // Sortable table
   grid.querySelectorAll('.dash-table th[data-sort]').forEach(th => {
@@ -725,6 +742,7 @@ function _showStudentDrillDown(grid, student) {
     <div class="drilldown-tabs">
       <button class="drilldown-tab active" data-tab="challenges">Challenges</button>
       <button class="drilldown-tab" data-tab="quiz">Quiz${quizDone ? ` <span class="drilldown-tab-badge">${quizScore !== null ? quizScore + '%' : quizDone}</span>` : ''}</button>
+      <button class="drilldown-tab" data-tab="programs">Programs</button>
     </div>
 
     <div class="drilldown-tab-pane" data-pane="challenges">
@@ -786,6 +804,41 @@ function _showStudentDrillDown(grid, student) {
       </div>
     </div>
 
+    <div class="drilldown-tab-pane hidden" data-pane="programs">
+      <div class="drilldown-body">
+        <div class="drilldown-section">
+          <div class="drilldown-section-title">Saved Programs</div>
+          <div id="dd-prog-list-${sUID}">
+            <button class="btn-ghost btn-sm" id="dd-load-progs-${sUID}">Load Programs</button>
+          </div>
+        </div>
+        <div class="code-viewer hidden" id="dd-prog-viewer-${sUID}">
+          <div class="code-viewer-header">
+            <span class="code-viewer-title" id="dd-prog-viewer-title-${sUID}"></span>
+            <button class="btn-ghost btn-sm" id="dd-prog-close-${sUID}">✕ Close</button>
+          </div>
+          <pre class="code-viewer-body" id="dd-prog-viewer-body-${sUID}"></pre>
+          <div class="teacher-feedback-section">
+            <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+              <div>
+                <div class="teacher-feedback-label">Mark (%)</div>
+                <input type="number" id="dd-prog-mark-${sUID}" min="0" max="100" placeholder="0–100"
+                  style="width:80px;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--bg-secondary);color:var(--text)">
+              </div>
+              <div style="flex:1;min-width:200px">
+                <div class="teacher-feedback-label">Feedback</div>
+                <textarea class="teacher-feedback-textarea" id="dd-prog-feedback-${sUID}" placeholder="Write feedback…" rows="3"></textarea>
+              </div>
+            </div>
+            <div style="margin-top:0.5rem;display:flex;gap:0.5rem;align-items:center">
+              <button class="btn-accent btn-sm" id="dd-prog-save-${sUID}">Save Feedback</button>
+              <span id="dd-prog-msg-${sUID}" style="font-size:0.8rem"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="code-viewer hidden" id="code-viewer-${sUID}">
       <div class="code-viewer-header">
         <span class="code-viewer-title" id="code-viewer-title-${sUID}"></span>
@@ -793,7 +846,7 @@ function _showStudentDrillDown(grid, student) {
       </div>
       <pre class="code-viewer-body" id="code-viewer-body-${sUID}"></pre>
       <div class="teacher-feedback-section">
-        <div class="teacher-feedback-label">Teacher Feedback</div>
+        <div class="teacher-feedback-label">Teacher Feedback (Challenge)</div>
         <div class="teacher-feedback-existing" id="feedback-existing-${sUID}"></div>
         <textarea class="teacher-feedback-textarea" id="feedback-textarea-${sUID}" placeholder="Write feedback for this student…" rows="3"></textarea>
         <button class="btn-accent btn-sm" id="feedback-save-${sUID}">Save Feedback</button>
@@ -829,6 +882,109 @@ function _showStudentDrillDown(grid, student) {
     });
   });
 
+  // Programs tab — load button
+  container.querySelector(`#dd-load-progs-${student.uid}`)?.addEventListener('click', async (e) => {
+    const btn    = e.currentTarget;
+    const listEl = container.querySelector(`#dd-prog-list-${student.uid}`);
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+    try {
+      const programs = await listPrograms(student.uid);
+      const studentSubs = (_programSubmissions ?? []).filter(s => s.uid === student.uid);
+      programs.forEach(p => {
+        _browseCache.set(`${student.uid}_${p.id}`, {
+          code: p.source ?? '',
+          mark: studentSubs.find(s => s.programId === p.id)?.mark ?? '',
+          feedback: studentSubs.find(s => s.programId === p.id)?.feedback ?? '',
+          subId: studentSubs.find(s => s.programId === p.id)?.id ?? null
+        });
+      });
+      if (!programs.length) {
+        listEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem">No saved programs.</p>';
+      } else {
+        listEl.innerHTML = `<div class="prog-browse-items">${
+          programs.map(p => {
+            const existing = studentSubs.find(s => s.programId === p.id);
+            const badge = existing?.status === 'reviewed'
+              ? `<span class="sub-badge sub-badge--reviewed">${existing.mark !== null ? existing.mark + '%' : '✓'}</span>`
+              : existing?.status === 'pending'
+              ? `<span class="sub-badge sub-badge--pending">Pending</span>`
+              : '';
+            return `<div class="prog-browse-item" data-uid="${escHtml(student.uid)}" data-prog-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}">
+              <span class="prog-browse-item-name">${escHtml(p.title)}</span>${badge}
+            </div>`;
+          }).join('')
+        }</div>`;
+        listEl.querySelectorAll('.prog-browse-item').forEach(item => {
+          item.addEventListener('click', () => {
+            listEl.querySelectorAll('.prog-browse-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            const uid     = item.dataset.uid;
+            const progId  = item.dataset.progId;
+            const title   = item.dataset.title;
+            const cached  = _browseCache.get(`${uid}_${progId}`) ?? {};
+            // Open the shared code viewer at the bottom of the drill-down
+            const ddViewer      = container.querySelector(`#dd-prog-viewer-${student.uid}`);
+            const ddTitle       = container.querySelector(`#dd-prog-viewer-title-${student.uid}`);
+            const ddBody        = container.querySelector(`#dd-prog-viewer-body-${student.uid}`);
+            const ddMark        = container.querySelector(`#dd-prog-mark-${student.uid}`);
+            const ddFeedback    = container.querySelector(`#dd-prog-feedback-${student.uid}`);
+            const ddSave        = container.querySelector(`#dd-prog-save-${student.uid}`);
+            const ddMsg         = container.querySelector(`#dd-prog-msg-${student.uid}`);
+            if (!ddViewer) return;
+            if (ddTitle)    ddTitle.textContent   = `${student.displayName ?? student.uid} — ${title}`;
+            if (ddBody)     ddBody.textContent     = cached.code ?? '';
+            if (ddMark)     ddMark.value           = cached.mark ?? '';
+            if (ddFeedback) ddFeedback.value       = cached.feedback ?? '';
+            if (ddMsg)      ddMsg.textContent      = '';
+            ddViewer.classList.remove('hidden');
+            ddViewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            ddSave?.addEventListener('click', async () => {
+              const markVal  = ddMark?.value.trim();
+              const mark     = markVal !== '' ? Number(markVal) : null;
+              const feedback = ddFeedback?.value.trim() ?? '';
+              if (mark !== null && (isNaN(mark) || mark < 0 || mark > 100)) {
+                if (ddMsg) { ddMsg.textContent = 'Mark must be 0–100.'; ddMsg.style.color = 'var(--error)'; }
+                return;
+              }
+              ddSave.disabled = true; ddSave.textContent = 'Saving…';
+              try {
+                const subId = await upsertProgramReview(
+                  uid, progId, title, cached.code ?? '',
+                  student.classCode ?? '', student.displayName ?? '',
+                  _teacherUid, mark, feedback
+                );
+                _browseCache.set(`${uid}_${progId}`, { ...cached, mark, feedback, subId });
+                if (!_programSubmissions) _programSubmissions = [];
+                const idx = _programSubmissions.findIndex(s => s.id === subId ||
+                  (s.uid === uid && s.programId === progId));
+                const updated = { ...(_programSubmissions[idx] ?? {}), id: subId, uid, programId: progId,
+                  title, code: cached.code ?? '', classCode: student.classCode ?? '',
+                  displayName: student.displayName ?? '', mark, feedback, status: 'reviewed', teacherUid: _teacherUid };
+                if (idx >= 0) _programSubmissions[idx] = updated;
+                else _programSubmissions.push(updated);
+                const badge = item.querySelector('.sub-badge') ?? (() => { const b = document.createElement('span'); item.appendChild(b); return b; })();
+                badge.className = 'sub-badge sub-badge--reviewed';
+                badge.textContent = mark !== null ? `${mark}%` : '✓';
+                if (ddMsg) { ddMsg.textContent = `Saved${mark !== null ? ` · ${mark}%` : ''} ✓`; ddMsg.style.color = 'var(--accent)'; }
+                ddSave.textContent = 'Saved ✓';
+                setTimeout(() => { ddSave.disabled = false; ddSave.textContent = 'Save Feedback'; }, 2000);
+              } catch (e2) {
+                if (ddMsg) { ddMsg.textContent = 'Error: ' + e2.message; ddMsg.style.color = 'var(--error)'; }
+                ddSave.disabled = false; ddSave.textContent = 'Save Feedback';
+              }
+            }, { once: true });
+          });
+        });
+      }
+    } catch (e) {
+      container.querySelector(`#dd-prog-list-${student.uid}`).innerHTML =
+        `<p style="color:var(--error);font-size:0.8rem">Error: ${escHtml(e.message)}</p>`;
+      btn.disabled = false; btn.textContent = 'Retry';
+    }
+  });
+
   // Code viewer
   const viewer      = container.querySelector(`#code-viewer-${student.uid}`);
   const viewerTitle = container.querySelector(`#code-viewer-title-${student.uid}`);
@@ -841,6 +997,10 @@ function _showStudentDrillDown(grid, student) {
 
   container.querySelector('.code-viewer-close')?.addEventListener('click', () => {
     viewer?.classList.add('hidden');
+  });
+
+  container.querySelector(`#dd-prog-close-${student.uid}`)?.addEventListener('click', () => {
+    container.querySelector(`#dd-prog-viewer-${student.uid}`)?.classList.add('hidden');
   });
 
   fbSaveBtn?.addEventListener('click', async () => {
@@ -895,6 +1055,298 @@ function _showStudentDrillDown(grid, student) {
   });
 
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Program Reviews ───────────────────────────────────────────────────────────
+
+function _buildProgramReviewsCard(students) {
+  const subs = _programSubmissions ?? [];
+  const studentUids = new Set(students.map(s => s.uid));
+  const visibleSubs = subs.filter(s => studentUids.has(s.uid))
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+      const ta = a.submittedAt?.toMillis?.() ?? 0;
+      const tb = b.submittedAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+  const pending = visibleSubs.filter(s => s.status === 'pending').length;
+
+  const subRows = visibleSubs.length
+    ? visibleSubs.map(s => {
+        const ms = s.submittedAt?.toMillis?.() ?? s.submittedAt ?? 0;
+        const dateStr = ms ? new Date(ms).toLocaleDateString('en-GB') : '—';
+        const statusBadge = s.status === 'pending'
+          ? `<span class="sub-badge sub-badge--pending">Pending</span>`
+          : `<span class="sub-badge sub-badge--reviewed">Reviewed</span>`;
+        const markStr = s.mark !== null && s.mark !== undefined ? `${s.mark}%` : '—';
+        return `<tr class="sub-row" data-sub-id="${escHtml(s.id)}" style="cursor:pointer">
+          <td>${escHtml(s.displayName || '—')}</td>
+          <td>${escHtml(s.title || '—')}</td>
+          <td>${dateStr}</td>
+          <td>${statusBadge}</td>
+          <td>${markStr}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="5" style="color:var(--text-muted)">No submissions yet.</td></tr>';
+
+  const browseRows = students.map(s => `
+    <tr>
+      <td>${escHtml(s.displayName ?? '—')}</td>
+      <td>${escHtml(_classNames[s.classCode] || s.classCode || '—')}</td>
+      <td><button class="btn-ghost btn-sm btn-load-progs" data-uid="${escHtml(s.uid)}">Load Programs</button></td>
+    </tr>
+    <tr class="hidden" id="browse-row-${escHtml(s.uid)}">
+      <td colspan="3" style="padding:0">
+        <div id="browse-list-${escHtml(s.uid)}" class="prog-browse-list"></div>
+      </td>
+    </tr>`).join('');
+
+  return `<div class="dash-card dash-card--wide" id="prog-reviews-card">
+    <div class="dash-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Program Reviews
+      ${pending ? `<span class="dash-card-badge">${pending} pending</span>` : ''}
+    </div>
+    <div class="drilldown-tabs" style="margin-bottom:0.75rem">
+      <button class="drilldown-tab active" data-prtab="submitted">Submitted for Review${pending ? ` (${pending})` : ''}</button>
+      <button class="drilldown-tab" data-prtab="browse">Browse All Programs</button>
+    </div>
+    <div class="pr-pane" data-prpane="submitted">
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead><tr><th>Student</th><th>Program</th><th>Date</th><th>Status</th><th>Mark</th></tr></thead>
+          <tbody id="sub-table-body">${subRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pr-pane hidden" data-prpane="browse">
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead><tr><th>Student</th><th>Class</th><th></th></tr></thead>
+          <tbody>${browseRows || '<tr><td colspan="3" style="color:var(--text-muted)">No students.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="code-viewer hidden" id="prog-review-viewer">
+      <div class="code-viewer-header">
+        <span class="code-viewer-title" id="prv-title"></span>
+        <button class="btn-ghost btn-sm" id="prv-close">✕ Close</button>
+      </div>
+      <pre class="code-viewer-body" id="prv-body"></pre>
+      <div class="teacher-feedback-section">
+        <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div class="teacher-feedback-label">Mark (%)</div>
+            <input type="number" id="prv-mark" min="0" max="100" placeholder="0–100"
+              style="width:80px;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--bg-secondary);color:var(--text)">
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div class="teacher-feedback-label">Feedback</div>
+            <textarea class="teacher-feedback-textarea" id="prv-feedback" placeholder="Write feedback for this student…" rows="3"></textarea>
+          </div>
+        </div>
+        <div style="margin-top:0.5rem;display:flex;gap:0.5rem;align-items:center">
+          <button class="btn-accent btn-sm" id="prv-save">Save Feedback</button>
+          <span id="prv-msg" style="font-size:0.8rem"></span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Per-card JS — code is stored in a Map to avoid data-attribute encoding issues
+const _browseCache = new Map();  // uid_progId → { code, mark, feedback, subId }
+
+function _bindProgramReviewsEvents(card, students) {
+  let _currentItem = null;  // { uid, programId, title, subId }
+
+  const viewer    = card.querySelector('#prog-review-viewer');
+  const prvTitle  = card.querySelector('#prv-title');
+  const prvBody   = card.querySelector('#prv-body');
+  const prvMark   = card.querySelector('#prv-mark');
+  const prvFeedback = card.querySelector('#prv-feedback');
+  const prvSave   = card.querySelector('#prv-save');
+  const prvMsg    = card.querySelector('#prv-msg');
+
+  // Tab switching
+  card.querySelectorAll('[data-prtab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      card.querySelectorAll('[data-prtab]').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      card.querySelectorAll('.pr-pane').forEach(p =>
+        p.classList.toggle('hidden', p.dataset.prpane !== tab.dataset.prtab));
+    });
+  });
+
+  function openViewer(uid, programId, title, subId) {
+    _currentItem = { uid, programId, title, subId };
+    const cached = _browseCache.get(`${uid}_${programId}`) ?? {};
+    if (prvTitle) prvTitle.textContent = `${students.find(s => s.uid === uid)?.displayName ?? uid} — ${title}`;
+    if (prvBody)  prvBody.textContent  = cached.code ?? '';
+    if (prvMark)  prvMark.value        = cached.mark ?? '';
+    if (prvFeedback) prvFeedback.value = cached.feedback ?? '';
+    if (prvMsg)   prvMsg.textContent   = '';
+    viewer?.classList.remove('hidden');
+    viewer?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  card.querySelector('#prv-close')?.addEventListener('click', () => {
+    viewer?.classList.add('hidden');
+    _currentItem = null;
+  });
+
+  // Submissions table row click — populate cache from _programSubmissions
+  card.querySelectorAll('.sub-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const subId = row.dataset.subId;
+      const sub = (_programSubmissions ?? []).find(s => s.id === subId);
+      if (!sub) return;
+      card.querySelectorAll('.sub-row').forEach(r => r.style.background = '');
+      row.style.background = 'var(--bg-secondary)';
+      _browseCache.set(`${sub.uid}_${sub.programId}`, {
+        code: sub.code ?? '', mark: sub.mark ?? '', feedback: sub.feedback ?? '', subId: sub.id
+      });
+      openViewer(sub.uid, sub.programId, sub.title, sub.id);
+    });
+  });
+
+  // Browse All: load programs per student
+  card.querySelectorAll('.btn-load-progs').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid     = btn.dataset.uid;
+      const listEl  = card.querySelector(`#browse-list-${uid}`);
+      const rowEl   = card.querySelector(`#browse-row-${uid}`);
+      if (!listEl || !rowEl) return;
+
+      if (!rowEl.classList.contains('hidden')) {
+        rowEl.classList.add('hidden');
+        btn.textContent = 'Load Programs';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const programs = await listPrograms(uid);
+        const studentSubs = (_programSubmissions ?? []).filter(s => s.uid === uid);
+
+        programs.forEach(p => {
+          const existing = studentSubs.find(s => s.programId === p.id);
+          _browseCache.set(`${uid}_${p.id}`, {
+            code: p.source ?? '',
+            mark: existing?.mark ?? '',
+            feedback: existing?.feedback ?? '',
+            subId: existing?.id ?? null
+          });
+        });
+
+        if (!programs.length) {
+          listEl.innerHTML = '<p style="padding:0.5rem 0.75rem;color:var(--text-muted);font-size:0.8rem">No saved programs.</p>';
+        } else {
+          listEl.innerHTML = `<div class="prog-browse-items">${
+            programs.map(p => {
+              const existing = studentSubs.find(s => s.programId === p.id);
+              const badge = existing?.status === 'reviewed'
+                ? `<span class="sub-badge sub-badge--reviewed">${existing.mark !== null ? existing.mark + '%' : '✓'}</span>`
+                : existing?.status === 'pending'
+                ? `<span class="sub-badge sub-badge--pending">Pending</span>`
+                : '';
+              return `<div class="prog-browse-item" data-uid="${escHtml(uid)}" data-prog-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}">
+                <span class="prog-browse-item-name">${escHtml(p.title)}</span>${badge}
+              </div>`;
+            }).join('')
+          }</div>`;
+
+          listEl.querySelectorAll('.prog-browse-item').forEach(item => {
+            item.addEventListener('click', () => {
+              listEl.querySelectorAll('.prog-browse-item').forEach(i => i.classList.remove('active'));
+              item.classList.add('active');
+              const cached = _browseCache.get(`${item.dataset.uid}_${item.dataset.progId}`);
+              openViewer(item.dataset.uid, item.dataset.progId, item.dataset.title, cached?.subId ?? null);
+            });
+          });
+        }
+
+        rowEl.classList.remove('hidden');
+        btn.textContent = 'Hide Programs';
+      } catch (e) {
+        listEl.innerHTML = `<p style="padding:0.5rem;color:var(--error);font-size:0.8rem">Error: ${escHtml(e.message)}</p>`;
+        rowEl.classList.remove('hidden');
+        btn.textContent = 'Retry';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  // Save feedback
+  prvSave?.addEventListener('click', async () => {
+    if (!_currentItem) return;
+    const markVal = prvMark?.value.trim();
+    const mark     = markVal !== '' ? Number(markVal) : null;
+    const feedback = prvFeedback?.value.trim() ?? '';
+
+    if (mark !== null && (isNaN(mark) || mark < 0 || mark > 100)) {
+      if (prvMsg) { prvMsg.textContent = 'Mark must be 0–100.'; prvMsg.style.color = 'var(--error)'; }
+      return;
+    }
+
+    prvSave.disabled = true;
+    prvSave.textContent = 'Saving…';
+    try {
+      const student = students.find(s => s.uid === _currentItem.uid);
+      const cached  = _browseCache.get(`${_currentItem.uid}_${_currentItem.programId}`) ?? {};
+
+      const subId = await upsertProgramReview(
+        _currentItem.uid, _currentItem.programId, _currentItem.title,
+        cached.code ?? '',
+        student?.classCode ?? '', student?.displayName ?? '',
+        _teacherUid, mark, feedback
+      );
+
+      // Update caches
+      _browseCache.set(`${_currentItem.uid}_${_currentItem.programId}`, {
+        ...cached, mark, feedback, subId
+      });
+      _currentItem.subId = subId;
+
+      if (!_programSubmissions) _programSubmissions = [];
+      const idx = _programSubmissions.findIndex(s => s.id === subId ||
+        (s.uid === _currentItem.uid && s.programId === _currentItem.programId));
+      const updated = {
+        ...(_programSubmissions[idx] ?? {}),
+        id: subId, uid: _currentItem.uid, programId: _currentItem.programId,
+        title: _currentItem.title, code: cached.code ?? '',
+        classCode: student?.classCode ?? '', displayName: student?.displayName ?? '',
+        mark, feedback, status: 'reviewed', teacherUid: _teacherUid
+      };
+      if (idx >= 0) _programSubmissions[idx] = updated;
+      else _programSubmissions.push(updated);
+
+      // Refresh sub-row if visible
+      const subRow = card.querySelector(`.sub-row[data-sub-id="${subId}"]`);
+      if (subRow) {
+        subRow.cells[3].innerHTML = `<span class="sub-badge sub-badge--reviewed">Reviewed</span>`;
+        subRow.cells[4].textContent = mark !== null ? `${mark}%` : '—';
+      }
+      // Refresh browse badge if visible
+      const browseItem = card.querySelector(`.prog-browse-item[data-prog-id="${_currentItem.programId}"]`);
+      if (browseItem) {
+        let badge = browseItem.querySelector('.sub-badge');
+        if (!badge) { badge = document.createElement('span'); browseItem.appendChild(badge); }
+        badge.className = 'sub-badge sub-badge--reviewed';
+        badge.textContent = mark !== null ? `${mark}%` : '✓';
+      }
+
+      if (prvMsg) { prvMsg.textContent = `Saved${mark !== null ? ` · ${mark}%` : ''} ✓`; prvMsg.style.color = 'var(--accent)'; }
+      prvSave.textContent = 'Saved ✓';
+      setTimeout(() => { prvSave.disabled = false; prvSave.textContent = 'Save Feedback'; }, 2000);
+    } catch (e) {
+      if (prvMsg) { prvMsg.textContent = 'Error: ' + e.message; prvMsg.style.color = 'var(--error)'; }
+      prvSave.disabled = false;
+      prvSave.textContent = 'Save Feedback';
+    }
+  });
 }
 
 // ── Hardest exercises ─────────────────────────────────────────────────────────

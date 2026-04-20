@@ -244,6 +244,80 @@ export async function getAllQuizProgress() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PROGRAM SUBMISSIONS (teacher feedback & marks)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export async function submitProgram(uid, programId, title, code, classCode, displayName) {
+  const q = query(collection(db, 'program_submissions'),
+    where('uid', '==', uid), where('programId', '==', programId));
+  const existing = await getDocs(q);
+  if (!existing.empty) {
+    const docId = existing.docs[0].id;
+    const prevStatus = existing.docs[0].data().status;
+    await updateDoc(doc(db, 'program_submissions', docId), {
+      code, title, submittedAt: serverTimestamp(),
+      status: prevStatus === 'reviewed' ? 'reviewed' : 'pending'
+    });
+    return docId;
+  }
+  const ref = await addDoc(collection(db, 'program_submissions'), {
+    uid, programId, title, code,
+    classCode: classCode || '', displayName: displayName || '',
+    submittedAt: serverTimestamp(),
+    status: 'pending', mark: null, feedback: null,
+    feedbackAt: null, teacherUid: null
+  });
+  return ref.id;
+}
+
+export async function getStudentSubmissions(uid) {
+  const q = query(collection(db, 'program_submissions'), where('uid', '==', uid));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getClassProgramSubmissions(classCodes) {
+  if (!classCodes?.length) return [];
+  const results = [];
+  for (let i = 0; i < classCodes.length; i += 10) {
+    const batch = classCodes.slice(i, i + 10);
+    const q = query(collection(db, 'program_submissions'), where('classCode', 'in', batch));
+    const snap = await getDocs(q);
+    snap.docs.forEach(d => results.push({ id: d.id, ...d.data() }));
+  }
+  return results;
+}
+
+export async function getAllProgramSubmissions() {
+  const snap = await getDocs(collection(db, 'program_submissions'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function upsertProgramReview(uid, programId, title, code, classCode, displayName, teacherUid, mark, feedback) {
+  const q = query(collection(db, 'program_submissions'),
+    where('uid', '==', uid), where('programId', '==', programId));
+  const existing = await getDocs(q);
+  const reviewData = {
+    mark: (mark !== '' && mark !== null && mark !== undefined) ? Number(mark) : null,
+    feedback: feedback || null,
+    teacherUid,
+    status: 'reviewed',
+    feedbackAt: serverTimestamp()
+  };
+  if (!existing.empty) {
+    await updateDoc(doc(db, 'program_submissions', existing.docs[0].id), reviewData);
+    return existing.docs[0].id;
+  }
+  const ref = await addDoc(collection(db, 'program_submissions'), {
+    uid, programId, title, code,
+    classCode: classCode || '', displayName: displayName || '',
+    submittedAt: serverTimestamp(),
+    ...reviewData
+  });
+  return ref.id;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ANALYTICS AGGREGATION
 // ══════════════════════════════════════════════════════════════════════════════
 
