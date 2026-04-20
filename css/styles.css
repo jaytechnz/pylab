@@ -649,11 +649,11 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 .feedback-panel-mark {
   font-weight: 700;
   font-size: 0.9rem;
-  color: #ffffff;
+  color: var(--accent);
 }
 .feedback-panel-label {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--accent);
   white-space: nowrap;
 }
 .feedback-panel-comment {
