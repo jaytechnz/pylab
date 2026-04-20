@@ -618,6 +618,18 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 }
 .program-item:hover .program-item-actions { opacity: 1; }
 
+.prog-feedback-badge {
+  flex-shrink: 0;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-right: 0.15rem;
+}
+.prog-feedback-badge--reviewed { background: rgba(34,197,94,0.18); color: var(--accent); }
+.prog-feedback-badge--pending  { background: rgba(245,158,11,0.18); color: var(--warning); }
+
 .icon-btn {
   background: none;
   border: none;

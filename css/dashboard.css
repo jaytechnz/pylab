@@ -490,6 +490,52 @@
   border-color: var(--accent);
 }
 
+/* ── Program Review card ─────────────────────────────────────────────────── */
+
+.pr-pane { }
+.pr-pane.hidden { display: none; }
+
+.sub-badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sub-badge--pending  { background: rgba(245,158,11,0.15); color: var(--warning); }
+.sub-badge--reviewed { background: rgba(34,197,94,0.15);  color: var(--accent); }
+
+.dash-card-badge {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(245,158,11,0.18);
+  color: var(--warning);
+}
+
+.prog-browse-list { padding: 0.25rem 0.5rem 0.5rem; }
+
+.prog-browse-items { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.25rem 0; }
+
+.prog-browse-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.1s;
+}
+.prog-browse-item:hover { background: var(--bg-secondary); }
+.prog-browse-item.active { background: var(--bg-secondary); border-color: var(--accent); }
+.prog-browse-item-name { flex: 1; font-size: 0.82rem; }
+
+/* ── Student program list feedback badges (sidebar) ──────────────────────── */
+
 /* ── Feedback card (kept for compatibility) ── */
 .feedback-summary { display: flex; flex-direction: column; gap: 0.5rem; }
 .feedback-item {
