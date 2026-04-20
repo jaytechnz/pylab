@@ -649,15 +649,15 @@ body.dyslexic-font .editor-highlight { font-family: var(--font-dyslexic) !import
 .feedback-panel-mark {
   font-weight: 700;
   font-size: 0.9rem;
-  color: var(--accent);
+  color: #ffffff;
 }
 .feedback-panel-label {
   font-weight: 600;
-  color: var(--accent);
+  color: #ffffff;
   white-space: nowrap;
 }
 .feedback-panel-comment {
-  color: var(--text-main);
+  color: #ffffff;
   line-height: 1.4;
 }
 
