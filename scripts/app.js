@@ -38,6 +38,9 @@ const runBtn            = $('btn-run');
 const stopBtn           = $('btn-stop');
 const saveBtn           = $('btn-save');
 const submitReviewBtn   = $('btn-submit-review');
+const feedbackPanel     = $('feedback-panel');
+const feedbackPanelMark = $('feedback-panel-mark');
+const feedbackPanelComment = $('feedback-panel-comment');
 const saveStatus        = $('save-status');
 
 const editorTextarea    = $('code-editor');
@@ -241,6 +244,7 @@ onAuth(async (user, profile) => {
       _mySubmissions = {};
       subs.forEach(s => { _mySubmissions[s.programId] = s; });
       renderProgramList(_allPrograms);
+      if (currentProgramId) showProgramFeedback(currentProgramId);
     }).catch(() => {});
   }
   newProgram();
@@ -361,6 +365,20 @@ function renderProgramList(programs) {
   });
 }
 
+function showProgramFeedback(programId) {
+  const sub = _mySubmissions[programId];
+  if (sub?.status === 'reviewed' && (sub.feedback || sub.mark !== null)) {
+    if (feedbackPanelMark) {
+      feedbackPanelMark.textContent = sub.mark !== null && sub.mark !== undefined ? `${sub.mark}%` : '';
+      feedbackPanelMark.style.display = sub.mark !== null && sub.mark !== undefined ? '' : 'none';
+    }
+    if (feedbackPanelComment) feedbackPanelComment.textContent = sub.feedback || '';
+    feedbackPanel?.classList.remove('hidden');
+  } else {
+    feedbackPanel?.classList.add('hidden');
+  }
+}
+
 function newProgram() {
   currentProgramId = null;
   currentTitle     = 'Untitled Program';
@@ -370,6 +388,7 @@ function newProgram() {
   setSaveStatus('');
   clearOutput();
   updateTabState();
+  feedbackPanel?.classList.add('hidden');
 }
 
 async function openProgram(id) {
@@ -384,6 +403,7 @@ async function openProgram(id) {
   clearOutput();
   updateTabState();
   renderProgramList(_allPrograms);
+  showProgramFeedback(id);
 }
 
 async function saveProgram() {
